@@ -1,0 +1,14 @@
+Ideje:
+    1) preveri statistike črk:
+        Za vsako črko preveri katera je najverjetnejša naslednja (in prejšnja) črka
+        Pod to točko seveda sledi, da so soglasniki blizu samoglasnikov in obratno
+
+    2) preglej manjkajoče črke:
+        (treba je še preverit resničnost sledeče izjave):
+        samo takrat, ko je število besed v filtriranem seznamu + 1 večje od manjkajočih črk faktorialno
+        (6! = 720, torej ne vem koliko je to pravilno)
+
+    3) reverse seed:
+        once you guess some first words, try getting the used seed:
+        bruteforce every seed until the order of words starts with the guessed words
+        if the guessed seed doesn't work then continue to collect data (10 words should be plenty (i think))
