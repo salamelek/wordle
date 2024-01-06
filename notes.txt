@@ -12,3 +12,15 @@ Ideje:
         once you guess some first words, try getting the used seed:
         bruteforce every seed until the order of words starts with the guessed words
         if the guessed seed doesn't work then continue to collect data (10 words should be plenty (i think))
+
+    4) manjka samo n črk:
+        v primeru, da imamo -+++++ in v filtriranem seznamu ostaja več kot 2 besedi, potem "pregledamo črke"
+
+        torej:
+            n: koliko napačnih črk je
+            m: koliko možnih besed je
+
+            -+++++ -> n=1 -> m=22
+            --++++ -> n=2 -> m=22^2
+            ---+++ -> n=3 -> m=22^3
+

@@ -134,10 +134,10 @@ public class Tekm_123456 implements Stroj {
         // besede <beseda>.
 
         for (int ixIzbira = 0; ixIzbira < n; ixIzbira++) {
-
             if (odziv.get(ixIzbira) == 'o') {
                 char crka = crkeIzbire.get(ixIzbira);
                 int ixBeseda = crkeBesede.indexOf(crka);
+
                 if (ixBeseda < 0 || crkeBesede.get(ixIzbira) == crka) {
                     return false;
                 }
