@@ -142,11 +142,12 @@ public class Tekm_63230387 implements Stroj {
         }
 
         if (!semUgotovilSeed) {
-            System.out.println("Na žalost ga nisem dobil :(");
+            System.out.println("Na žalost ga nisem dobil :(\n");
             this.seedJeBilZgresen = true;
         }
     }
 
+    // TODO za preverit ce se razlikujejo za n
     public int preglejCeSeBesedeRazlikujejoLeZa1() {
         /*
         mislim, da je ime funkcije samo posebej umevno
@@ -175,6 +176,14 @@ public class Tekm_63230387 implements Stroj {
         }
 
         return indeks;
+    }
+
+    public boolean[] preglejCeSeRazlikujejoZaN() {
+        /*
+        Vrne tabelo boolean[6], kjer true pomeni, da se po indeksu razlikuje
+        */
+
+        boolean[] tabelaIndeksov = new boolean[6];
     }
 
     public char[] vrniBesedoZaIskanjeCrk(int indeks) {
