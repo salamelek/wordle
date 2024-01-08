@@ -8,7 +8,6 @@ public class Tekm_63230387 implements Stroj {
     private char[] prejsnjaIzbira;
     private Set<String> slovar;
     private List<String> ugotovljeneBesede;
-    private long ugotovljenSeed;
     private boolean semUgotovilSeed;
     private List<String> pravilneBesede;
     private int pravilneBesedeCounter;
@@ -31,7 +30,7 @@ public class Tekm_63230387 implements Stroj {
     public String poteza(List<Character> odzivSeznam) {
         // SEED CRACKING
         if (this.ugotovljeneBesede.size() == this.stBesedZaSeed && !this.semUgotovilSeed && !this.seedJeBilZgresen) {
-            int numSeeds = 50000; // bo pogledalo bodisi v - kot v +
+            int numSeeds = 500; // bo pogledalo bodisi v - kot v +
 
             crackSeed(numSeeds);
         }
@@ -64,8 +63,7 @@ public class Tekm_63230387 implements Stroj {
             this.ugotovljeneBesede.add(new String(this.prejsnjaIzbira));
 
             // odstranimo že ugotovljeno besedo
-            odstaniBesedo();
-            this.zacetneBesede = odstraniVseNull(this.zacetneBesede);
+            odstaniUgotovljenoBesedo();
 
             return null;
         }
@@ -90,13 +88,15 @@ public class Tekm_63230387 implements Stroj {
 
 //        System.out.println(Arrays.deepToString(this.filtriraneBesede));
 
-        // pregledamo črke, če manjka samo ena
-        int indeksManjkajoce = preglejCeSeBesedeRazlikujejoLeZa1();
-        if (indeksManjkajoce != -1 && this.filtriraneBesede.length > 2) {
-            // nastavimo stevilo potrebnih pregledov
-//            System.out.println("\niscem crke");
-            return new String(this.prejsnjaIzbira = vrniBesedoZaIskanjeCrk(indeksManjkajoce));
+        boolean[] razlike = vrniTabeloRazlik();
+        int stRazlik = kolikoVTabeli(razlike, true);
+        // TODO za zdaj se zdi, da stRazlik je najboljše <= 4 in količina besed > (2 * stRazlik)
+        // TODO ne vem pa še če je to to... morda lahko še kaj optimiziram
+        if (stRazlik <= 4 && stRazlik >= 1 && this.filtriraneBesede.length > (2 * stRazlik)) {
+//            System.out.printf("%niscem crke (st: %d)%n", stRazlik);
+            return new String(this.prejsnjaIzbira = vrniBesedoZaIskanjeCrk(razlike));
         }
+
 
 //        System.out.println("\niscem optimalno");
         return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
@@ -129,14 +129,13 @@ public class Tekm_63230387 implements Stroj {
                     continue sign;
                 }
 
-                this.ugotovljenSeed = seedToCheck;
                 this.semUgotovilSeed = true;
 
                 List<String> pravilneBesede = new ArrayList<>(this.slovar);
-                Collections.shuffle(pravilneBesede, new Random(this.ugotovljenSeed));
+                Collections.shuffle(pravilneBesede, new Random(seedToCheck));
                 this.pravilneBesede = pravilneBesede;
 
-                System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", this.ugotovljenSeed);
+                System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", seedToCheck);
                 break outer;
             }
         }
@@ -147,63 +146,76 @@ public class Tekm_63230387 implements Stroj {
         }
     }
 
-    // TODO za preverit ce se razlikujejo za n
-    public int preglejCeSeBesedeRazlikujejoLeZa1() {
+    public boolean[] vrniTabeloRazlik() {
         /*
-        mislim, da je ime funkcije samo posebej umevno
-
-        najprej pregledamo vse črke na indeksu 0, nato 1, itd.
+        Vrne tabelo boolean[6], kjer true pomeni, da se po indeksu razlikuje
+        ne rabimo odziva, ker z odzivom je možno, da zgubimo potezo
         */
 
+        boolean[] tabelaIndeksov = new boolean[6];
         char[] prvaBeseda = this.filtriraneBesede[0];
-        boolean seJeZeRazlikovala = false;
-        int indeks = -1;
 
+        outer:
         for (int i=0; i<this.dolzinaBesed; i++) {
             for (int j=1; j<this.filtriraneBesede.length; j++) {
                 char[] beseda = this.filtriraneBesede[j];
 
-                if (beseda[i] != prvaBeseda[i] && !seJeZeRazlikovala) {
-                    seJeZeRazlikovala = true;
-                    indeks = i;
-                    break;
-                }
-
-                if (beseda[i] != prvaBeseda[i] && seJeZeRazlikovala) {
-                   return -1;
+                if (prvaBeseda[i] != beseda[i]) {
+                    tabelaIndeksov[i] = true;
+                    continue outer;
                 }
             }
         }
 
-        return indeks;
+        return tabelaIndeksov;
     }
 
-    public boolean[] preglejCeSeRazlikujejoZaN() {
-        /*
-        Vrne tabelo boolean[6], kjer true pomeni, da se po indeksu razlikuje
-        */
+    public char[] vrniBesedoZaIskanjeCrk(boolean[] razlike) {
+        // ne indeksu crke shranimo kolikokrat se pojavi (kot ena mapa)
+        // lahko bi rabil dolzino [('z' + 1) - 'a'], ampak se mi nece
+        int[] stCrk = new int['z' + 1];
 
-        boolean[] tabelaIndeksov = new boolean[6];
-    }
+        // zapiši koliko vsakih črk je
+        for (int i=0; i<razlike.length; i++) {
+            boolean jeRazlika = razlike[i];
 
-    public char[] vrniBesedoZaIskanjeCrk(int indeks) {
-        char[] crkeZaIskanje = "aaaaaa".toCharArray();
-
-        int count = 0;
-        for (char[] beseda: this.filtriraneBesede) {
-            char crka = beseda[indeks];
-
-            if (kolikoVTabeli(crkeZaIskanje, crka) == 0) {
-                crkeZaIskanje[count] = crka;
-                count++;
+            if (!jeRazlika) {
+                continue;
             }
 
-            if (count >= this.dolzinaBesed) {
+            for (char[] beseda: this.filtriraneBesede) {
+                stCrk[beseda[i]]++;
+            }
+        }
+
+        char[] besedaZaIskanje = "aaaaaa".toCharArray();
+        for (int i=0; i<6; i++) {
+            char najCrka = vrniNajCrko(stCrk);
+
+            if (stCrk[najCrka] == 0) {
                 break;
             }
+
+            besedaZaIskanje[i] = najCrka;
+            stCrk[najCrka] = 0;
         }
 
-        return crkeZaIskanje;
+
+        return besedaZaIskanje;
+    }
+
+    public char vrniNajCrko(int[] stCrk) {
+        char najCrka = 0;
+        int najPojav = -1;
+
+        for (char crka='a'; crka<='z'; crka++) {
+            if (stCrk[crka] > najPojav) {
+                najCrka = crka;
+                najPojav = stCrk[crka];
+            }
+        }
+
+        return najCrka;
     }
 
     public char[][] pretvoriBesede(Set<String> besede) {
@@ -223,13 +235,15 @@ public class Tekm_63230387 implements Stroj {
         return tabelaBesed;
     }
 
-    public void odstaniBesedo() {
+    public void odstaniUgotovljenoBesedo() {
         for (int i=0; i<this.zacetneBesede.length; i++) {
             if (Arrays.equals(this.zacetneBesede[i], this.prejsnjaIzbira)) {
                 this.zacetneBesede[i] = null;
                 break;
             }
         }
+
+        this.zacetneBesede = odstraniVseNull(this.zacetneBesede);
     }
 
     public char[] pretvoriOdziv(List<Character> odzivSeznam) {
@@ -393,14 +407,22 @@ public class Tekm_63230387 implements Stroj {
         return stevilo;
     }
 
+    public int kolikoVTabeli(boolean[] tabela, boolean iskani) {
+        int stevilo = 0;
+
+        for (boolean element: tabela) {
+            if (element == iskani) {
+                stevilo++;
+            }
+        }
+
+        return stevilo;
+    }
+
     public char[][] odstraniVseNull(char[][] seznam) {
         int stNull = kolikoVTabeli(seznam, null);
         int novaDolzina = seznam.length - stNull;
         char[][] novaTabela = new char[novaDolzina][this.dolzinaBesed];
-
-//        if (novaDolzina == 0) {
-//            throw new RuntimeException("ODSTRANILI SMO VSE IZ TABELE AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-//        }
 
         int counterNove = 0;
         for (char[] beseda : seznam) {
