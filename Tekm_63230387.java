@@ -6,10 +6,10 @@ public class Tekm_63230387 implements Stroj {
     private char[][] zacetneBesede;
     private char[][] filtriraneBesede;
     private char[] prejsnjaIzbira;
-    private Set<String> slovar;
-    private List<String> ugotovljeneBesede;
+    private char[][] slovar;
+    private char[][] ugotovljeneBesede;
     private boolean semUgotovilSeed;
-    private List<String> pravilneBesede;
+    private char[][] pravilneBesede;
     private int pravilneBesedeCounter;
     private int stBesedZaSeed;
     private boolean seedJeBilZgresen;
@@ -21,18 +21,19 @@ public class Tekm_63230387 implements Stroj {
         this.seedJeBilZgresen = false;
         this.stBesedZaSeed = 10;
         this.pravilneBesedeCounter = this.stBesedZaSeed;
-        this.slovar = besede;
         this.zacetneBesede = pretvoriBesede(besede);
-        this.ugotovljeneBesede = new ArrayList<>();
+        this.slovar = this.zacetneBesede;
+        this.ugotovljeneBesede = new char[0][this.dolzinaBesed];
     }
 
     @Override
     public String poteza(List<Character> odzivSeznam) {
         // SEED CRACKING
-        if (this.ugotovljeneBesede.size() == this.stBesedZaSeed && !this.semUgotovilSeed && !this.seedJeBilZgresen) {
-            int numSeeds = 500; // bo pogledalo bodisi v - kot v +
+        // TODO preveri 230547 krat da se ne pokvari ce ugotovi zgresen seed
+        if (this.ugotovljeneBesede.length == this.stBesedZaSeed && !this.semUgotovilSeed && !this.seedJeBilZgresen) {
+            int seconds = 1 * 60; // bo pogledalo bodisi v - kot v +
 
-            crackSeed(numSeeds);
+            crackSeed(seconds);
         }
 
 
@@ -46,7 +47,7 @@ public class Tekm_63230387 implements Stroj {
             this.filtriraneBesede = Arrays.copyOf(this.zacetneBesede, this.zacetneBesede.length);
 
             if (this.semUgotovilSeed) {
-                return vrniZnanoBesedo();
+                return new String (vrniZnanoBesedo());
             }
 
             return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
@@ -60,7 +61,7 @@ public class Tekm_63230387 implements Stroj {
             /*
             Ugotovili smo besedo!
             */
-            this.ugotovljeneBesede.add(new String(this.prejsnjaIzbira));
+            dodajUgotovljenoBesedo();
 
             // odstranimo že ugotovljeno besedo
             odstaniUgotovljenoBesedo();
@@ -80,7 +81,7 @@ public class Tekm_63230387 implements Stroj {
         // =============================
         // VV - Normalni potek igre - VV
         if (this.semUgotovilSeed) {
-            return vrniZnanoBesedo();
+            return new String (vrniZnanoBesedo());
         }
 
         // odstranimo besede, ki niso več relevantne
@@ -103,26 +104,60 @@ public class Tekm_63230387 implements Stroj {
     }
 
 
-    public String vrniZnanoBesedo() {
-        this.pravilneBesedeCounter++;
-        return this.pravilneBesede.get(this.pravilneBesedeCounter - 1);
+    public void dodajUgotovljenoBesedo() {
+        /*
+        doda ugotovljeno besedo v seznam
+        */
+
+        // this.ugotovljeneBesede.add(new String(this.prejsnjaIzbira));
+        int dolzinaPrejsnje = this.ugotovljeneBesede.length;
+        char[][] novSeznam = new char[dolzinaPrejsnje + 1][this.dolzinaBesed];
+
+        for (int i=0; i<dolzinaPrejsnje; i++) {
+            novSeznam[i] = this.ugotovljeneBesede[i];
+        }
+
+        novSeznam[dolzinaPrejsnje] = this.prejsnjaIzbira;
+
+        this.ugotovljeneBesede = novSeznam;
     }
 
-    public void crackSeed(int numSeeds) {
-        System.out.println("\niščem seed...");
+    public char[] vrniZnanoBesedo() {
+        this.pravilneBesedeCounter++;
+        return this.pravilneBesede[this.pravilneBesedeCounter - 1];
+    }
+
+    public void crackSeed(int seconds) {
+        /*
+        Išče semena od 0 v obe smeri (+-)
+        dokler ne preseže časa podanega v parametru seconds
+        */
+
+        System.out.printf("%n'Investiram' %d sekund za iskanje semena...%n", seconds);
+
+        long start = System.currentTimeMillis();
+        long end = start + seconds * 1000;
+
+        int i = 0;
 
         outer:
-        for (int i=0; i<numSeeds; i++) {
+        while (System.currentTimeMillis() < end) {
             sign:
             for (int sign=-1; sign<=1; sign+=2) {
-                int seedToCheck = i * sign;
+                char[][] besede = Arrays.copyOf(this.slovar, this.slovar.length);
+                besede = shuffleArray(besede, i * sign);
 
-                List<String> lstBesede = new ArrayList<>(this.slovar);
-                Collections.shuffle(lstBesede, new Random(seedToCheck));
+                // FIXME ZAKAJ POGOSTO KO UGOTOVI SEED JE PRVA BESEDA NULL??????
+
+                char[][] first10Elements = Arrays.copyOfRange(besede, 0, Math.min(10, besede.length));
+                System.out.printf("%d:%n", i * sign);
+                System.out.println(Arrays.deepToString(first10Elements));
+                System.out.println(Arrays.deepToString(this.ugotovljeneBesede));
+                System.out.println("==================");
 
                 // preglej prvih 10 besed
                 for (int j=0; j<this.stBesedZaSeed; j++) {
-                    if (lstBesede.get(j).equals(this.ugotovljeneBesede.get(j))) {
+                    if (Arrays.equals(besede[j], this.ugotovljeneBesede[j])) {
                         continue;
                     }
 
@@ -130,20 +165,39 @@ public class Tekm_63230387 implements Stroj {
                 }
 
                 this.semUgotovilSeed = true;
+                this.pravilneBesede = besede;
 
-                List<String> pravilneBesede = new ArrayList<>(this.slovar);
-                Collections.shuffle(pravilneBesede, new Random(seedToCheck));
-                this.pravilneBesede = pravilneBesede;
-
-                System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", seedToCheck);
+                System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", i * sign);
                 break outer;
             }
+
+            i++;
         }
 
         if (!semUgotovilSeed) {
-            System.out.println("Na žalost ga nisem dobil :(\n");
+            System.out.printf("Na žalost ga nisem dobil :(%nPoiskal sem le semena od -%d do %d%n%n", i, i);
             this.seedJeBilZgresen = true;
         }
+    }
+
+    private static char[][] shuffleArray(char[][] besede2, long seed) {
+        /*
+        Najlepša hvala stricu internetu
+        */
+
+        Random random = new Random(seed);
+
+        char[][] besede = Arrays.copyOf(besede2, besede2.length);
+
+        for (int i=besede.length - 1; i>0; i--) {
+            int index = random.nextInt(i + 1);
+
+            char[] temp = besede[i];
+            besede[i] = besede[index];
+            besede[index] = temp;
+        }
+
+        return besede;
     }
 
     public boolean[] vrniTabeloRazlik() {
