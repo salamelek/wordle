@@ -21,7 +21,9 @@ public class Tekm_63230387_3b1b implements Stroj {
                 "posluh".toCharArray(),
                 "hiteti".toCharArray(),
                 "mlinar".toCharArray(),
-                "bobnar".toCharArray()
+                "tutati".toCharArray(),
+                "bobnar".toCharArray(),
+                "ttuati".toCharArray()
         };
     }
 
@@ -75,7 +77,7 @@ public class Tekm_63230387_3b1b implements Stroj {
          * lahko bi celo computali optimalno besedo vsakih n-poskusov
          * */
 
-        return "parien".toCharArray();
+        return "ttuati".toCharArray();
     }
 
     public char[][] pretvoriBesede(Set<String> besede) {
@@ -198,6 +200,7 @@ public class Tekm_63230387_3b1b implements Stroj {
     }
 
     public void filtrirajBesede(char[] odziv) {
+        System.out.println("filtriram besede");
         /**
          * 1) odstrani vse besede, ki nimajo pravilnih črk
          * 2) odstrani vse besede, ki:
@@ -230,7 +233,9 @@ public class Tekm_63230387_3b1b implements Stroj {
         }
 
         outer:
-        for (char[] beseda: this.filtriraneBesede) {
+        for (int i=0; i<this.filtriraneBesede.length; i++) {
+            char[] beseda = this.filtriraneBesede[i];
+
             // pravilne črke
             for (int j = 0; j < pravilneCrke.length; j++) {
                 char crka = pravilneCrke[j];
@@ -240,14 +245,14 @@ public class Tekm_63230387_3b1b implements Stroj {
                 }
 
                 if (crka != beseda[j]) {
-                    beseda = null;
+                    this.filtriraneBesede[i] = null;
                     continue outer;
                 }
             }
 
             // ugodne črke
             for (int j = 0; j < ugodneCrke.length; j++) {
-                char crka = pravilneCrke[j];
+                char crka = ugodneCrke[j];
 
                 if (crka == 0) {
                     continue;
@@ -255,13 +260,13 @@ public class Tekm_63230387_3b1b implements Stroj {
 
                 // odstrani besedo, če ima ugodno črko na istem indeksu
                 if (crka == beseda[j]) {
-                    beseda = null;
+                    this.filtriraneBesede[i] = null;
                     continue outer;
                 }
 
                 // odstrani besedo, če ima manj ugodnih črk kakor jih je v odzivu
                 if (kolikoVTabeli(beseda, crka) < kolikoVTabeli(ugodneCrke, crka)) {
-                    beseda = null;
+                    this.filtriraneBesede[i] = null;
                     continue outer;
                 }
             }
@@ -276,7 +281,7 @@ public class Tekm_63230387_3b1b implements Stroj {
 
                 // odstrani besedo, če ima napačno črko (ki ni pravilna ali ugodna)
                 if (kolikoVTabeli(beseda, crka) > 0) {
-                    beseda = null;
+                    this.filtriraneBesede[i] = null;
                     continue outer;
                 }
             }
