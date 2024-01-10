@@ -467,25 +467,6 @@ public class Tekm_63230387 implements Stroj {
         return vsiIndeksi;
     }
 
-    public void filtrirajBesede(char[] odziv) {
-        /**
-         * Iz seznama možnih besed odstranimo vse besede, ki se ne vzklajajo z odzivom
-         * To seveda sem veselo prekopiral od danega razreda
-         * */
-
-        // totalno moje delo
-        for (int i=0; i<this.filtriraneBesede.length; i++) {
-            char[] beseda = this.filtriraneBesede[i];
-
-            if (!jeZdruzljiva(beseda, this.prejsnjaIzbira, odziv)) {
-                this.filtriraneBesede[i] = null;
-            }
-        }
-
-        // odstranimo vse null iz tabele
-        this.filtriraneBesede = odstraniVseNull(this.filtriraneBesede);
-    }
-
     public int kolikoVTabeli(char[][] tabela, char[] iskani) {
         /**
          * Vrne število iskanega elementa v tabeli (besede v slovarju)
@@ -571,12 +552,31 @@ public class Tekm_63230387 implements Stroj {
         return -1;
     }
 
+    public void filtrirajBesede(char[] odziv) {
+        /**
+         * Iz seznama možnih besed odstranimo vse besede, ki se ne vzklajajo z odzivom
+         * To seveda sem veselo prekopiral od danega razreda
+         * */
+
+        // totalno moje delo
+        for (int i=0; i<this.filtriraneBesede.length; i++) {
+            char[] beseda = this.filtriraneBesede[i];
+
+            if (!jeZdruzljiva(beseda, this.prejsnjaIzbira, odziv)) {
+                this.filtriraneBesede[i] = null;
+            }
+        }
+
+        // odstranimo vse null iz tabele
+        this.filtriraneBesede = odstraniVseNull(this.filtriraneBesede);
+    }
+
     private boolean jeZdruzljiva(char[] besedaPrava, char[] izbiraPrava, char[] odziv) {
         /**
          * Najlepša hvala za razred Tekm_123456.java
          * */
 
-        // delamo s kopijo, da ne zamešamo vseka
+        // delamo s kopijo, da ne zamešamo vsega
         char[] beseda = Arrays.copyOf(besedaPrava, besedaPrava.length);
         char[] izbira = Arrays.copyOf(izbiraPrava, izbiraPrava.length);
 
