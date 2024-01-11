@@ -39,7 +39,7 @@ public class Tekm_63230387 implements Stroj {
         // SEED CRACKING
         // TODO preveri 230547 krat da se ne pokvari ce ugotovi zgresen seed
         if (this.ugotovljeneBesede.length == this.stBesedZaSeed && !this.semUgotovilSeed && !this.seedJeBilZgresen) {
-            int seconds = 10; // bo pogledalo bodisi v - kot v +
+            int seconds = 60; // bo pogledalo bodisi v - kot v +
 
             crackSeed(seconds);
         }
@@ -554,65 +554,89 @@ public class Tekm_63230387 implements Stroj {
 
     public void filtrirajBesede(char[] odziv) {
         /**
-         * Iz seznama možnih besed odstranimo vse besede, ki se ne vzklajajo z odzivom
-         * To seveda sem veselo prekopiral od danega razreda
+         * 1) odstrani vse besede, ki nimajo pravilnih črk
+         * 2) odstrani vse besede, ki:
+         *      > nimajo ugodne črke (pazi na pravilne črke ;-;)
+         *      > imajo ugodno črko na istem mestu kot odziv
+         *      > imajo manj ugodnih črk kot odziv (seveda pa je treba šteti tudi pravilne črke ;-;)
+         *      >
+         *
+         * NEVEMMMM MORDA SE DA TIPO ŠTET AL NEVEM KAJ
          * */
 
-        // totalno moje delo
+        char[] pravilneCrke = new char[this.dolzinaBesed];
+        char[] ugodneCrke = new char[this.dolzinaBesed];
+        char[] napacneCrke = new char[this.dolzinaBesed];
+
+        for (int i=0; i<odziv.length; i++) {
+            char znak = odziv[i];
+
+            switch (znak) {
+                case '+':
+                    pravilneCrke[i] = this.prejsnjaIzbira[i];
+                    break;
+                case 'o':
+                    ugodneCrke[i] = this.prejsnjaIzbira[i];
+                    break;
+                case '-':
+                    napacneCrke[i] = this.prejsnjaIzbira[i];
+                    break;
+            }
+        }
+
+        outer:
         for (int i=0; i<this.filtriraneBesede.length; i++) {
             char[] beseda = this.filtriraneBesede[i];
 
-            if (!jeZdruzljiva(beseda, this.prejsnjaIzbira, odziv)) {
-                this.filtriraneBesede[i] = null;
+            // pravilne črke
+            for (int j = 0; j < pravilneCrke.length; j++) {
+                char pravilnaCrka = pravilneCrke[j];
+
+                if (pravilnaCrka == 0) {
+                    continue;
+                }
+
+                if (pravilnaCrka != beseda[j]) {
+                    this.filtriraneBesede[i] = null;
+                    continue outer;
+                }
+            }
+
+            // ugodne črke
+            for (int j = 0; j < ugodneCrke.length; j++) {
+                char ugodnaCrka = ugodneCrke[j];
+
+                if (ugodnaCrka == 0) {
+                    continue;
+                }
+
+                // odstrani besedo, če ima ugodno črko na istem indeksu
+                if (ugodnaCrka == beseda[j]) {
+                    this.filtriraneBesede[i] = null;
+                    continue outer;
+                }
+
+                // odstrani besedo, če ima manj ugodnih črk kakor jih je v odzivu
+                if (kolikoVTabeli(beseda, ugodnaCrka) < kolikoVTabeli(ugodneCrke, ugodnaCrka)) {
+                    this.filtriraneBesede[i] = null;
+                    continue outer;
+                }
+            }
+
+            // napačne črke
+            for (char napacnaCrka : napacneCrke) {
+                if (napacnaCrka == 0) {
+                    continue;
+                }
+
+                // odstrani besedo, če ima napačno črko (ki ni pravilna ali ugodna)
+                if (kolikoVTabeli(pravilneCrke, napacnaCrka) + kolikoVTabeli(ugodneCrke, napacnaCrka) < kolikoVTabeli(beseda, napacnaCrka)) {
+                    this.filtriraneBesede[i] = null;
+                    continue outer;
+                }
             }
         }
 
-        // odstranimo vse null iz tabele
         this.filtriraneBesede = odstraniVseNull(this.filtriraneBesede);
-    }
-
-    private boolean jeZdruzljiva(char[] besedaPrava, char[] izbiraPrava, char[] odziv) {
-        /**
-         * Najlepša hvala za razred Tekm_123456.java
-         * */
-
-        // delamo s kopijo, da ne zamešamo vsega
-        char[] beseda = Arrays.copyOf(besedaPrava, besedaPrava.length);
-        char[] izbira = Arrays.copyOf(izbiraPrava, izbiraPrava.length);
-
-        for (int i=0; i<this.dolzinaBesed; i++) {
-            if (odziv[i] == '+') {
-                if (beseda[i] != izbira[i]) {
-                    return false;
-                }
-
-                beseda[i] = '#';
-                izbira[i] = '_';
-            }
-        }
-
-        // TODO lahko bi celo štel koliko črk je lahko
-        for (int i=0; i<this.dolzinaBesed; i++) {
-            if (odziv[i] == 'o') {
-                char crka = izbira[i];
-                int ixBeseda = dobiIndex(beseda, crka);
-
-                if (ixBeseda < 0 || beseda[i] == crka) {
-                    return false;
-                }
-
-                // Označimo, da smo pripadajoča položaja že pregledali.
-                beseda[ixBeseda] = '#';
-                izbira[i]= '_';
-            }
-        }
-
-        for (int i=0; i<this.dolzinaBesed; i++) {
-            if (odziv[i] == '-' && kolikoVTabeli(beseda, izbira[i]) > 0) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

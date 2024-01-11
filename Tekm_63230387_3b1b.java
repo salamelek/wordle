@@ -6,25 +6,23 @@ public class Tekm_63230387_3b1b implements Stroj {
     private char[][] ugotovljeneBesede;
     private char[] prejsnjaIzbira;
     private int dolzinaBesed;
+    private int kolikoBesedPrej;
 
 
     @Override
     public void inicializiraj(Set<String> besede) {
         this.dolzinaBesed = 6;
-//        this.zacetneBesede = pretvoriBesede(besede);
-        this.zacetneBesede = new char[][] {
-                "banana".toCharArray(),
-                "dudati".toCharArray(),
-                "abakon".toCharArray(),
-                "lulati".toCharArray(),
-                "cestar".toCharArray(),
-                "posluh".toCharArray(),
-                "hiteti".toCharArray(),
-                "mlinar".toCharArray(),
-                "tutati".toCharArray(),
-                "bobnar".toCharArray(),
-                "ttuati".toCharArray()
-        };
+        this.zacetneBesede = pretvoriBesede(besede);
+        this.kolikoBesedPrej = this.zacetneBesede.length;
+
+//        this.zacetneBesede = new char[][] {
+//                "tutati".toCharArray(),
+//                "utatut".toCharArray(),
+//                "brtoal".toCharArray(),
+//                "sklqjd".toCharArray(),
+//                "askdpj".toCharArray(),
+//                "batoal".toCharArray(),
+//        };
     }
 
     @Override
@@ -52,11 +50,9 @@ public class Tekm_63230387_3b1b implements Stroj {
             return null;
         }
 
-        System.out.println(Arrays.deepToString(this.filtriraneBesede));
         filtrirajBesede(odziv);
-        System.out.println(Arrays.deepToString(this.filtriraneBesede));
 
-        System.exit(-1);
+//        System.out.println(Arrays.deepToString(this.filtriraneBesede));
 
         return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
     }
@@ -77,7 +73,17 @@ public class Tekm_63230387_3b1b implements Stroj {
          * lahko bi celo computali optimalno besedo vsakih n-poskusov
          * */
 
-        return "ttuati".toCharArray();
+        int kolikoBesedZdaj = this.filtriraneBesede.length;
+
+        int p = this.kolikoBesedPrej / kolikoBesedZdaj;
+        double info = log2(1./p);
+
+        this.kolikoBesedPrej = kolikoBesedZdaj;
+        return "abadef".toCharArray();
+    }
+
+    public static int log2(double N) {
+        return (int)(Math.log(N) / Math.log(2));
     }
 
     public char[][] pretvoriBesede(Set<String> besede) {
@@ -200,7 +206,6 @@ public class Tekm_63230387_3b1b implements Stroj {
     }
 
     public void filtrirajBesede(char[] odziv) {
-        System.out.println("filtriram besede");
         /**
          * 1) odstrani vse besede, ki nimajo pravilnih črk
          * 2) odstrani vse besede, ki:
@@ -238,13 +243,13 @@ public class Tekm_63230387_3b1b implements Stroj {
 
             // pravilne črke
             for (int j = 0; j < pravilneCrke.length; j++) {
-                char crka = pravilneCrke[j];
+                char pravilnaCrka = pravilneCrke[j];
 
-                if (crka == 0) {
+                if (pravilnaCrka == 0) {
                     continue;
                 }
 
-                if (crka != beseda[j]) {
+                if (pravilnaCrka != beseda[j]) {
                     this.filtriraneBesede[i] = null;
                     continue outer;
                 }
@@ -252,39 +257,39 @@ public class Tekm_63230387_3b1b implements Stroj {
 
             // ugodne črke
             for (int j = 0; j < ugodneCrke.length; j++) {
-                char crka = ugodneCrke[j];
+                char ugodnaCrka = ugodneCrke[j];
 
-                if (crka == 0) {
+                if (ugodnaCrka == 0) {
                     continue;
                 }
 
                 // odstrani besedo, če ima ugodno črko na istem indeksu
-                if (crka == beseda[j]) {
+                if (ugodnaCrka == beseda[j]) {
                     this.filtriraneBesede[i] = null;
                     continue outer;
                 }
 
                 // odstrani besedo, če ima manj ugodnih črk kakor jih je v odzivu
-                if (kolikoVTabeli(beseda, crka) < kolikoVTabeli(ugodneCrke, crka)) {
+                if (kolikoVTabeli(beseda, ugodnaCrka) < kolikoVTabeli(ugodneCrke, ugodnaCrka)) {
                     this.filtriraneBesede[i] = null;
                     continue outer;
                 }
             }
 
             // napačne črke
-            for (int j = 0; j < napacneCrke.length; j++) {
-                char crka = pravilneCrke[j];
-
-                if (crka == 0 || kolikoVTabeli(pravilneCrke, crka) > 0 || kolikoVTabeli(ugodneCrke, crka) > 0) {
+            for (char napacnaCrka : napacneCrke) {
+                if (napacnaCrka == 0) {
                     continue;
                 }
 
                 // odstrani besedo, če ima napačno črko (ki ni pravilna ali ugodna)
-                if (kolikoVTabeli(beseda, crka) > 0) {
+                if (kolikoVTabeli(pravilneCrke, napacnaCrka) + kolikoVTabeli(ugodneCrke, napacnaCrka) < kolikoVTabeli(beseda, napacnaCrka)) {
                     this.filtriraneBesede[i] = null;
                     continue outer;
                 }
             }
         }
+
+        this.filtriraneBesede = odstraniVseNull(this.filtriraneBesede);
     }
 }
