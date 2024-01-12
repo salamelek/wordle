@@ -4,35 +4,25 @@ import java.util.stream.IntStream;
 
 public class MyTesting {
     public static void main(String[] args) {
-        for (int i=1; i<=19; i++) {
-            System.out.print(i + ": ");
-            System.out.println(((i - 1) / 6) + 1);
-        }
+        char[][] besede = pretvoriBesede(TestSkupno.preberiSlovar(TestSkupno.SLOVAR));
 
-//        long seed = 123;
-//        char[][] in = new char[][]{
-//                "banana".toCharArray(),
-//                "penguin".toCharArray(),
-//                "table".toCharArray(),
-//                "car".toCharArray(),
-//                "antenna".toCharArray(),
-//                "shovel".toCharArray()
-//        };
+        for (int i=0; i<=100; i++) {
+            Random random = new Random(i);
+            System.out.println(i + ": " + random.nextInt(besede.length));
+
+
+
+
+
+//            char[][] besede2 = Arrays.copyOf(besede, besede.length);
+//            shuffleArray(besede2, random);
 //
-//        System.out.println("original: \t" + Arrays.deepToString(in));
+//            for (int j=0; j<10; j++) {
+//                System.out.print(new String(besede2[j]) + ", ");
+//            }
 //
-//        shuffleArray(in, new Random(seed));
-//        System.out.println("shuffled: \t" + Arrays.deepToString(in));
-//
-//        //Ordered list of integers from 0 to in.length
-//        int[] mapping = new int[]{0,1,2,3,4,5};
-//        shuffleArray(mapping, new Random(seed));//same seed -> same shuffle
-//
-//        char[][] out = new char[in.length][];
-//        for(int i = 0; i < out.length; i++)
-//            out[mapping[i]] = in[i];
-//
-//        System.out.println("out: \t\t" + Arrays.deepToString(out));
+//            System.out.println();
+        }
     }
 
     private static void shuffleArray(int[] array, Random random) {
@@ -55,5 +45,22 @@ public class MyTesting {
             array[i] = array[index];
             array[index] = temp;
         }
+    }
+
+    public static char[][] pretvoriBesede(Set<String> besede) {
+        /**
+         * pretvorimo Set<String> v 2D char tabelo zaradi hitrosti
+         * */
+
+        int stBesed = besede.size();
+        char[][] tabelaBesed = new char[stBesed][6];
+
+        int indeks = 0;
+        for (String beseda: besede) {
+            tabelaBesed[indeks] = beseda.toCharArray();
+            indeks++;
+        }
+
+        return tabelaBesed;
     }
 }

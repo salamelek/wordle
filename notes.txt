@@ -24,3 +24,19 @@ Ideje:
             --++++ -> n=2 -> m=22^2
             ---+++ -> n=3 -> m=22^3
 
+
+Katera je optimalna beseda?
+    Najbolj optimalna beseda je tista, ki vodi do najmanjšega števila poskusov
+    Najbolj optimalna beseda je tista, ki zoži možne besede na le eno v najmanjšem številu poskusov
+
+Beseda, ki najbolj zmanjša nabor možnih besed:
+
+
+Seed cracking:
+    treba bi blo nekako povezati seed s pojavom neke besede na n-tem mestu
+
+
+
+
+Dobi vse možne odzive:
+    1) za vsako besedo dobi odziv --> prepočasno
