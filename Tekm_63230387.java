@@ -467,12 +467,7 @@ public class Tekm_63230387 implements Stroj {
         for (double st: tabela) {
             if (st > naj) {
                 naj = st;
-                continue;
             }
-
-//            if (st <= 0) {
-//                throw new RuntimeException("max() metoda dela le s pozitivnimi števili!");
-//            }
         }
 
         return naj;
@@ -638,20 +633,6 @@ public class Tekm_63230387 implements Stroj {
         }
 
         return novaTabela;
-    }
-
-    public short dobiIndex(char[] beseda, char crka) {
-        /*
-        Vrne prvi indeks iskane črke v besedi (ali pa -1 če črke v besedi ni)
-        */
-
-        for (short i=0; i<beseda.length; i++) {
-            if (beseda[i] == crka) {
-                return i;
-            }
-        }
-
-        return -1;
     }
 
     public int dobiIndex(double[] tabela, double iskani) {
