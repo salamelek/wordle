@@ -2,7 +2,7 @@ import java.util.*;
 
 
 public class Tekm_63230387 implements Stroj {
-    private int dolzinaBesed;
+    private short dolzinaBesed;
     private char[][] zacetneBesede;
     private char[][] filtriraneBesede;
     private char[] prejsnjaIzbira;
@@ -10,8 +10,8 @@ public class Tekm_63230387 implements Stroj {
     private char[][] ugotovljeneBesede;
     private boolean semUgotovilSeed;
     private char[][] pravilneBesede;
-    private int pravilneBesedeCounter;
-    private int stBesedZaSeed;
+    private short pravilneBesedeCounter;
+    private short stBesedZaSeed;
     private boolean seedJeBilZgresen;
 
     @Override
@@ -38,7 +38,7 @@ public class Tekm_63230387 implements Stroj {
 
         // SEED CRACKING
         if (this.ugotovljeneBesede.length == this.stBesedZaSeed && !this.semUgotovilSeed && !this.seedJeBilZgresen) {
-            int seconds = 30; // bo pogledalo bodisi v - kot v +
+            short seconds = 10; // bo pogledalo bodisi v - kot v +
 
             crackSeed(seconds);
         }
@@ -117,7 +117,7 @@ public class Tekm_63230387 implements Stroj {
          * */
 
         boolean[] razlike = vrniTabeloRazlik();
-        int stRazlik = kolikoVTabeli(razlike, true);
+        short stRazlik = kolikoVTabeli(razlike, true);
 
         // testiraj katera možnost je najboljsa
 
@@ -140,7 +140,7 @@ public class Tekm_63230387 implements Stroj {
         int dolzinaPrejsnje = this.ugotovljeneBesede.length;
         char[][] novSeznam = new char[dolzinaPrejsnje + 1][this.dolzinaBesed];
 
-        for (int i=0; i<dolzinaPrejsnje; i++) {
+        for (short i=0; i<dolzinaPrejsnje; i++) {
             novSeznam[i] = this.ugotovljeneBesede[i];
         }
 
@@ -158,7 +158,7 @@ public class Tekm_63230387 implements Stroj {
         return this.pravilneBesede[this.pravilneBesedeCounter - 1];
     }
 
-    public void crackSeed(int seconds) {
+    public void crackSeed(short seconds) {
         /**
          * Ko dosežemo želeno število ugotovljenih besed (this.stBesedZaSeed) začnemo s seed crackingom
          * Dokler imamo še kaj časa, preverimo vsa možna števila od 0 do kolikor pač nam uspe. (bodisi v plus kot v minus)
@@ -170,12 +170,12 @@ public class Tekm_63230387 implements Stroj {
         long start = System.currentTimeMillis();
         long end = start + seconds * 1000;
 
-        int seedCounter = 0;
+        short seedCounter = 0;
 
         outer:
         while (System.currentTimeMillis() < end) {
             sign:
-            for (int sign=-1; sign<=1; sign+=2) {
+            for (short sign=-1; sign<=1; sign+=2) {
                 Random random = new Random(seedCounter * sign);
                 char[][] besede = Arrays.copyOf(this.slovar, this.slovar.length);
 
@@ -195,7 +195,7 @@ public class Tekm_63230387 implements Stroj {
                 }
 
                 // preglej prvih 10 besed
-                for (int j=0; j<this.stBesedZaSeed; j++) {
+                for (short j=0; j<this.stBesedZaSeed; j++) {
                     if (Arrays.equals(besede[j], this.ugotovljeneBesede[j])) {
                         continue;
                     }
@@ -229,8 +229,8 @@ public class Tekm_63230387 implements Stroj {
         char[] prvaBeseda = this.filtriraneBesede[0];
 
         outer:
-        for (int i=0; i<this.dolzinaBesed; i++) {
-            for (int j=1; j<this.filtriraneBesede.length; j++) {
+        for (short i=0; i<this.dolzinaBesed; i++) {
+            for (short j=1; j<this.filtriraneBesede.length; j++) {
                 char[] beseda = this.filtriraneBesede[j];
 
                 if (prvaBeseda[i] != beseda[i]) {
@@ -251,10 +251,10 @@ public class Tekm_63230387 implements Stroj {
 
         // ne indeksu crke shranimo kolikokrat se pojavi (kot ena mapa)
         // lahko bi rabil dolzino [('z' + 1) - 'a'], ampak se mi nece
-        int[] stCrk = new int['z' + 1];
+        short[] stCrk = new short['z' + 1];
 
         // zapiši koliko vsakih črk je
-        for (int i=0; i<razlike.length; i++) {
+        for (short i=0; i<razlike.length; i++) {
             boolean jeRazlika = razlike[i];
 
             if (!jeRazlika) {
@@ -267,7 +267,7 @@ public class Tekm_63230387 implements Stroj {
         }
 
         char[] besedaZaIskanje = "aaaaaa".toCharArray();
-        for (int i=0; i<6; i++) {
+        for (short i=0; i<6; i++) {
             char najCrka = vrniNajCrko(stCrk);
 
             if (stCrk[najCrka] == 0) {
@@ -282,13 +282,13 @@ public class Tekm_63230387 implements Stroj {
         return besedaZaIskanje;
     }
 
-    public char vrniNajCrko(int[] stCrk) {
+    public char vrniNajCrko(short[] stCrk) {
         /**
          * Vrne črko, ki se največ pojavlja glede na "mapo" stCrk
          * */
 
         char najCrka = 0;
-        int najPojav = -1;
+        short najPojav = -1;
 
         for (char crka='a'; crka<='z'; crka++) {
             if (stCrk[crka] > najPojav) {
@@ -308,7 +308,7 @@ public class Tekm_63230387 implements Stroj {
         int stBesed = besede.size();
         char[][] tabelaBesed = new char[stBesed][this.dolzinaBesed];
 
-        int indeks = 0;
+        short indeks = 0;
         for (String beseda: besede) {
             tabelaBesed[indeks] = beseda.toCharArray();
             indeks++;
@@ -323,7 +323,7 @@ public class Tekm_63230387 implements Stroj {
          * Na tak način, za vsako novo besedo lahko imamo besedo manj za iskanje
          * */
 
-        for (int i=0; i<this.zacetneBesede.length; i++) {
+        for (short i=0; i<this.zacetneBesede.length; i++) {
             if (Arrays.equals(this.zacetneBesede[i], this.prejsnjaIzbira)) {
                 this.zacetneBesede[i] = null;
                 break;
@@ -340,7 +340,7 @@ public class Tekm_63230387 implements Stroj {
 
         char[] odziv = new char[this.dolzinaBesed];
 
-        for (int i=0; i<this.dolzinaBesed; i++) {
+        for (short i=0; i<this.dolzinaBesed; i++) {
             odziv[i] = odzivSeznam.get(i);
         }
 
@@ -356,20 +356,20 @@ public class Tekm_63230387 implements Stroj {
          * */
 
         // indeks števila predstavlja ascii code char-a
-        int[][] mapaStCrk = vrniMapoStCrk();
+        short[][] mapaStCrk = vrniMapoStCrk();
         char[] najCrke = new char[this.dolzinaBesed];
 
-        int najCrkeCounter = 0;
-        for (int i=0; i<this.dolzinaBesed; i++) {
+        short najCrkeCounter = 0;
+        for (short i=0; i<this.dolzinaBesed; i++) {
             char najCrka = 0;
-            int najPojav = -1;
+            short najPojav = -1;
 
             for (char crka='a'; crka<='z'; crka++) {
                 if (kolikoVTabeli(najCrke, crka) > 0 && !moramRabimIstoCrko()) {
                     continue;
                 }
 
-                int[] stCrk = mapaStCrk[crka];
+                short[] stCrk = mapaStCrk[crka];
 
                 if (stCrk[i] > najPojav) {
                     najPojav = stCrk[i];
@@ -404,8 +404,8 @@ public class Tekm_63230387 implements Stroj {
          * Pregleda, če ima dana beseda ponavljajoče se črke
          * */
 
-        for (int i=0; i<beseda.length; i++) {
-            for (int j=0; j<beseda.length; j++) {
+        for (short i=0; i<beseda.length; i++) {
+            for (short j=0; j<beseda.length; j++) {
                 if (i == j) {
                     continue;
                 }
@@ -419,27 +419,27 @@ public class Tekm_63230387 implements Stroj {
         return false;
     }
 
-    public int[][] vrniMapoStCrk() {
+    public short[][] vrniMapoStCrk() {
         /**
-         * Vrne "mapo" v obili int[][].
+         * Vrne "mapo" v obili short[][].
          * Ključ je char črka (ki jo lahko interpretiramo kot int)
-         * Vrednost pa je int[], ki šteje kolikokrat se je črka pojavila na katerem indeksu
+         * Vrednost pa je short[], ki šteje kolikokrat se je črka pojavila na katerem indeksu
          * npr. če hočemo indekse črke r, poiščemo tabelo['r']
          * Vem, da se to dela z mapami, ampak vem tudi da so bolj počasne kot tabele
          * */
 
         char[] crke = "abcdefghijklmnoprstuvz".toCharArray();
-        int[][] mapaStCrk = new int['z' + 1][this.dolzinaBesed];
+        short[][] mapaStCrk = new short['z' + 1][this.dolzinaBesed];
 
         for (char crka: crke) {
             for (char[] beseda: this.filtriraneBesede) {
-                int[]indeksiCrk = vrniVseIndekse(beseda, crka);
+                short[]indeksiCrk = vrniVseIndekse(beseda, crka);
 
                 if (indeksiCrk == null) {
                     continue;
                 }
 
-                for (int indeks: indeksiCrk) {
+                for (short indeks: indeksiCrk) {
                     mapaStCrk[crka][indeks]++;
                 }
             }
@@ -448,22 +448,22 @@ public class Tekm_63230387 implements Stroj {
         return mapaStCrk;
     }
 
-    public int[] vrniVseIndekse(char[] beseda, char crka) {
+    public short[] vrniVseIndekse(char[] beseda, char crka) {
         /**
-         * Vrne tabelo int[] vseh indeksov iskane črke v besedi
+         * Vrne tabelo short[] vseh indeksov iskane črke v besedi
          * npr. beseda: banana | iskana: a => [1, 3, 5]
          * */
 
-        int stCrk = kolikoVTabeli(beseda, crka);
+        short stCrk = kolikoVTabeli(beseda, crka);
 
         if (stCrk == 0) {
             return null;
         }
 
-        int[] vsiIndeksi = new int[stCrk];
+        short[] vsiIndeksi = new short[stCrk];
 
-        int indeksiCounter = 0;
-        for (int i=0; i<beseda.length; i++) {
+        short indeksiCounter = 0;
+        for (short i=0; i<beseda.length; i++) {
             char crkaVBesedi = beseda[i];
 
             if (crkaVBesedi == crka) {
@@ -475,12 +475,12 @@ public class Tekm_63230387 implements Stroj {
         return vsiIndeksi;
     }
 
-    public int kolikoVTabeli(char[][] tabela, char[] iskani) {
+    public short kolikoVTabeli(char[][] tabela, char[] iskani) {
         /**
          * Vrne število iskanega elementa v tabeli (besede v slovarju)
          * */
 
-        int stevilo = 0;
+        short stevilo = 0;
 
         for (char[] element: tabela) {
             if (Arrays.equals(element, iskani)) {
@@ -491,12 +491,12 @@ public class Tekm_63230387 implements Stroj {
         return stevilo;
     }
 
-    public int kolikoVTabeli(char[] tabela, char iskani) {
+    public short kolikoVTabeli(char[] tabela, char iskani) {
         /**
          * Vrne število iskanega elementa v tabeli (črke v besedi)
          * */
 
-        int stevilo = 0;
+        short stevilo = 0;
 
         for (char element: tabela) {
             if (element == iskani) {
@@ -507,12 +507,12 @@ public class Tekm_63230387 implements Stroj {
         return stevilo;
     }
 
-    public int kolikoVTabeli(boolean[] tabela, boolean iskani) {
+    public short kolikoVTabeli(boolean[] tabela, boolean iskani) {
         /**
          * Vrne število iskanega elementa v tabeli (vrednosti true al false)
          * */
 
-        int stevilo = 0;
+        short stevilo = 0;
 
         for (boolean element: tabela) {
             if (element == iskani) {
@@ -529,11 +529,11 @@ public class Tekm_63230387 implements Stroj {
          * S to metodo, zbrišem vse null besede, da ne zgubljam časa pri iskanju
          * */
 
-        int stNull = kolikoVTabeli(seznam, null);
+        short stNull = kolikoVTabeli(seznam, null);
         int novaDolzina = seznam.length - stNull;
         char[][] novaTabela = new char[novaDolzina][this.dolzinaBesed];
 
-        int counterNove = 0;
+        short counterNove = 0;
         for (char[] beseda : seznam) {
             if (beseda == null) {
                 continue;
@@ -546,12 +546,12 @@ public class Tekm_63230387 implements Stroj {
         return novaTabela;
     }
 
-    public int dobiIndex(char[] beseda, char crka) {
+    public short dobiIndex(char[] beseda, char crka) {
         /**
          * Vrne prvi indeks iskane črke v besedi (ali pa -1 če črke v besedi ni)
          * */
 
-        for (int i=0; i<beseda.length; i++) {
+        for (short i=0; i<beseda.length; i++) {
             if (beseda[i] == crka) {
                 return i;
             }
@@ -576,7 +576,7 @@ public class Tekm_63230387 implements Stroj {
         char[] ugodneCrke = new char[this.dolzinaBesed];
         char[] napacneCrke = new char[this.dolzinaBesed];
 
-        for (int i=0; i<odziv.length; i++) {
+        for (short i=0; i<odziv.length; i++) {
             char znak = odziv[i];
 
             switch (znak) {
@@ -593,11 +593,11 @@ public class Tekm_63230387 implements Stroj {
         }
 
         outer:
-        for (int i=0; i<this.filtriraneBesede.length; i++) {
+        for (short i=0; i<this.filtriraneBesede.length; i++) {
             char[] beseda = this.filtriraneBesede[i];
 
             // pravilne črke
-            for (int j = 0; j < pravilneCrke.length; j++) {
+            for (short j = 0; j < pravilneCrke.length; j++) {
                 char pravilnaCrka = pravilneCrke[j];
 
                 if (pravilnaCrka == 0) {
@@ -611,7 +611,7 @@ public class Tekm_63230387 implements Stroj {
             }
 
             // ugodne črke
-            for (int j = 0; j < ugodneCrke.length; j++) {
+            for (short j = 0; j < ugodneCrke.length; j++) {
                 char ugodnaCrka = ugodneCrke[j];
 
                 if (ugodnaCrka == 0) {

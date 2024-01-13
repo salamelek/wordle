@@ -162,7 +162,7 @@ public class Tekm_63230387_new implements Stroj {
 
 //        System.out.println("rabim 2!");
 
-        // vsi guess bojo samo obstoječe besede (ker vseh možnih kombinacij črk je 22⁶ :')
+        // vsi guess bojo samo obstoječe besede (ker vseh možnih kombinacij črk je 22^6 :')
         double[] povprecnoBesedManj = new double[this.filtriraneBesede.length];
 
         for (int i=0; i<this.filtriraneBesede.length; i++) {
