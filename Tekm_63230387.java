@@ -23,7 +23,7 @@ public class Tekm_63230387 implements Stroj {
 
         this.dolzinaBesed = 6;
         this.stBesedZaSeed = 12;
-        this.crackingSeconds = 5;
+        this.crackingSeconds = 7 * 60;
 
         this.semUgotovilSeed = false;
         this.seedJeBilZgresen = false;
@@ -174,7 +174,7 @@ public class Tekm_63230387 implements Stroj {
         long start = System.currentTimeMillis();
         long end = start + this.crackingSeconds * 1000L;
 
-        short seedCounter = 0;
+        int seedCounter = 0;
 
         outer:
         while (System.currentTimeMillis() < end) {
@@ -221,6 +221,8 @@ public class Tekm_63230387 implements Stroj {
             System.out.printf("Na žalost ga nisem dobil :(%nPoiskal sem le semena od -%d do %d%n%n", Math.abs(seedCounter), Math.abs(seedCounter));
             this.seedJeBilZgresen = true;
         }
+
+        System.exit(-1);
     }
 
     public boolean[] vrniTabeloRazlik() {
