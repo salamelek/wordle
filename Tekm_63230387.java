@@ -22,7 +22,7 @@ public class Tekm_63230387 implements Stroj {
         */
 
         this.dolzinaBesed = 6;
-        this.stBesedZaSeed = 10;
+        this.stBesedZaSeed = 12;
         this.crackingSeconds = 5;
 
         this.semUgotovilSeed = false;
@@ -58,7 +58,7 @@ public class Tekm_63230387 implements Stroj {
                 return new String(this.prejsnjaIzbira = vrniZnanoBesedo());
             }
 
-            return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
+            return new String(this.prejsnjaIzbira = vrniBesedo_popularneCrkeNaIndeksu());
         }
 
         // pretvorimo tudi odziv v char[]
@@ -104,14 +104,14 @@ public class Tekm_63230387 implements Stroj {
 
         boolean[] razlike = seSplacaIskatCrke();
         if (razlike != null) {
-            return new String(this.prejsnjaIzbira = vrniBesedoZaIskanjeCrk(razlike));
+            return new String(this.prejsnjaIzbira = vrniBesedo_iskaneCrke(razlike));
         }
 
         if (this.filtriraneBesede.length < 6) {
-            return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo2());
+            return new String(this.prejsnjaIzbira = vrniBesedo_bruteForce());
         }
 
-        return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
+        return new String(this.prejsnjaIzbira = vrniBesedo_popularneCrkeNaIndeksu());
     }
 
 
@@ -247,45 +247,6 @@ public class Tekm_63230387 implements Stroj {
         return tabelaIndeksov;
     }
 
-    public char[] vrniBesedoZaIskanjeCrk(boolean[] razlike) {
-        /*
-        Ustvarimo tabelo, ki vsebuje črke, ki nam bodo povedale katera je manjkakoča črka
-        To rabimo v primerih odziva "-+++++", saj ugotavljati vsako besedo posebej bi bilo zamudno
-        */
-
-        // ne indeksu crke shranimo kolikokrat se pojavi (kot ena mapa)
-        // lahko bi rabil dolzino [('z' + 1) - 'a'], ampak se mi nece
-        short[] stCrk = new short['z' + 1];
-
-        // zapiši koliko vsakih črk je
-        for (short i=0; i<razlike.length; i++) {
-            boolean jeRazlika = razlike[i];
-
-            if (!jeRazlika) {
-                continue;
-            }
-
-            for (char[] beseda: this.filtriraneBesede) {
-                stCrk[beseda[i]]++;
-            }
-        }
-
-        char[] besedaZaIskanje = "aaaaaa".toCharArray();
-        for (short i=0; i<6; i++) {
-            char najCrka = vrniNajCrko(stCrk);
-
-            if (stCrk[najCrka] == 0) {
-                break;
-            }
-
-            besedaZaIskanje[i] = najCrka;
-            stCrk[najCrka] = 0;
-        }
-
-
-        return besedaZaIskanje;
-    }
-
     public char vrniNajCrko(short[] stCrk) {
         /*
         Vrne črko, ki se največ pojavlja glede na "mapo" stCrk
@@ -351,7 +312,7 @@ public class Tekm_63230387 implements Stroj {
         return odziv;
     }
 
-    public char[] vrniOptimalnoBesedo() {
+    public char[] vrniBesedo_popularneCrkeNaIndeksu() {
         /*
         Izračuna katera je najbolj popularna črka na določenem indeksu
         Če je to možno, ne ponavlja črk
@@ -388,7 +349,7 @@ public class Tekm_63230387 implements Stroj {
         return najCrke;
     }
 
-    public char[] vrniOptimalnoBesedo2() {
+    public char[] vrniBesedo_bruteForce() {
         // vsi guess bojo samo obstoječe besede (ker vseh možnih kombinacij črk je 22^6 :')
         double[] povprecnoBesedManj = new double[this.filtriraneBesede.length];
 
@@ -412,6 +373,45 @@ public class Tekm_63230387 implements Stroj {
         int indeksNajBesede = dobiIndex(povprecnoBesedManj, najvecBesedManj);
 
         return this.filtriraneBesede[indeksNajBesede];
+    }
+
+    public char[] vrniBesedo_iskaneCrke(boolean[] razlike) {
+        /*
+        Ustvarimo tabelo, ki vsebuje črke, ki nam bodo povedale katera je manjkakoča črka
+        To rabimo v primerih odziva "-+++++", saj ugotavljati vsako besedo posebej bi bilo zamudno
+        */
+
+        // ne indeksu crke shranimo kolikokrat se pojavi (kot ena mapa)
+        // lahko bi rabil dolzino [('z' + 1) - 'a'], ampak se mi nece
+        short[] stCrk = new short['z' + 1];
+
+        // zapiši koliko vsakih črk je
+        for (short i=0; i<razlike.length; i++) {
+            boolean jeRazlika = razlike[i];
+
+            if (!jeRazlika) {
+                continue;
+            }
+
+            for (char[] beseda: this.filtriraneBesede) {
+                stCrk[beseda[i]]++;
+            }
+        }
+
+        char[] besedaZaIskanje = "aaaaaa".toCharArray();
+        for (short i=0; i<6; i++) {
+            char najCrka = vrniNajCrko(stCrk);
+
+            if (stCrk[najCrka] == 0) {
+                break;
+            }
+
+            besedaZaIskanje[i] = najCrka;
+            stCrk[najCrka] = 0;
+        }
+
+
+        return besedaZaIskanje;
     }
 
     public char[][] vrniMozneOdzive(char[] zacetnaBeseda) {
