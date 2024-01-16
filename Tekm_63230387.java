@@ -1,5 +1,12 @@
 import java.util.*;
 
+// TODO (bruteforce)
+/*
+- make lots of lists (or maps, idk) that say "these words contain a, these contain b, etc etc
+- when checking how many words does it remove, cut it early if the average is not promising
+- first narrow down the list of all possible combinations (idk how yet)
+*/
+
 
 public class Tekm_63230387 implements Stroj {
     private short dolzinaBesed;
@@ -14,7 +21,6 @@ public class Tekm_63230387 implements Stroj {
     private short stBesedZaSeed;
     private boolean seedJeBilZgresen;
     private int crackingSeconds;
-    private int isciDobroThreshold;
 
     @Override
     public void inicializiraj(Set<String> besede) {
@@ -25,7 +31,6 @@ public class Tekm_63230387 implements Stroj {
         this.dolzinaBesed = 6;
         this.stBesedZaSeed = 12;
         this.crackingSeconds = -1;
-        this.isciDobroThreshold = 1000;
 
         this.semUgotovilSeed = false;
         this.seedJeBilZgresen = false;
@@ -60,12 +65,13 @@ public class Tekm_63230387 implements Stroj {
             }
 
             // če dam več kot 750 postane dokaj pocasno
-            if (this.zacetneBesede.length > 750) {
+            if (this.zacetneBesede.length < 750) {
+                return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
+            } else {
+                // TODO check if kornea is really the word (use 23 and 12)
                 char[] beseda = "kornea".toCharArray();
                 return new String(this.prejsnjaIzbira = beseda);
             }
-
-            return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
         }
 
         // pretvorimo tudi odziv v char[]
@@ -113,11 +119,7 @@ public class Tekm_63230387 implements Stroj {
             return new String(this.prejsnjaIzbira = vrniBesedo_iskaneCrke(razlike));
         }
 
-        if (this.filtriraneBesede.length < this.isciDobroThreshold) {
-            return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
-        }
-
-        return new String(this.prejsnjaIzbira = vrniBesedo_popularneCrkeNaIndeksu());
+        return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
     }
 
 
@@ -322,43 +324,6 @@ public class Tekm_63230387 implements Stroj {
         return odziv;
     }
 
-    public char[] vrniBesedo_popularneCrkeNaIndeksu() {
-        /*
-        Izračuna katera je najbolj popularna črka na določenem indeksu
-        Če je to možno, ne ponavlja črk
-
-        Dejansko s to funkcijo poskusim dobiti čim več pravilnih črk v odzivu
-        */
-
-        // indeks števila predstavlja ascii code char-a
-        short[][] mapaStCrk = vrniMapoStCrk();
-        char[] najCrke = new char[this.dolzinaBesed];
-
-        short najCrkeCounter = 0;
-        for (short i=0; i<this.dolzinaBesed; i++) {
-            char najCrka = 0;
-            short najPojav = -1;
-
-            for (char crka='a'; crka<='z'; crka++) {
-                if (kolikoVTabeli(najCrke, crka) > 0 && !moramRabimIstoCrko()) {
-                    continue;
-                }
-
-                short[] stCrk = mapaStCrk[crka];
-
-                if (stCrk[i] > najPojav) {
-                    najPojav = stCrk[i];
-                    najCrka = crka;
-                }
-            }
-
-            najCrke[najCrkeCounter] = najCrka;
-            najCrkeCounter++;
-        }
-
-        return najCrke;
-    }
-
     public char[] vrniBesedo_iskaneCrke(boolean[] razlike) {
         /*
         Ustvarimo tabelo, ki vsebuje črke, ki nam bodo povedale katera je manjkakoča črka
@@ -411,110 +376,6 @@ public class Tekm_63230387 implements Stroj {
         }
 
         return najBeseda;
-    }
-
-    public double max(double[] tabela) {
-        // vem, da ni optimalno, ampak mi ne rabi več od tega
-        double naj = 0;
-
-        for (double st: tabela) {
-            if (st > naj) {
-                naj = st;
-            }
-        }
-
-        return naj;
-    }
-
-    public boolean moramRabimIstoCrko() {
-        /*
-        Metoda, ki preveri kdaj se mora rabiti iste črke pri optimalni besedi.
-        Če ne bi tega pregledali, ne bi nikoli ugotovili besed, ki imajo ponavljajoče črke
-        */
-
-        for (char[] beseda: this.filtriraneBesede) {
-            if (!imaPonavljajoceCrke(beseda)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public boolean imaPonavljajoceCrke(char[] beseda) {
-        /*
-        Pregleda, če ima dana beseda ponavljajoče se črke
-        */
-
-        for (short i=0; i<beseda.length; i++) {
-            for (short j=0; j<beseda.length; j++) {
-                if (i == j) {
-                    continue;
-                }
-
-                if (beseda[i] == beseda[j]) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public short[][] vrniMapoStCrk() {
-        /*
-        Vrne "mapo" v obili short[][].
-        Ključ je char črka (ki jo lahko interpretiramo kot int)
-        Vrednost pa je short[], ki šteje kolikokrat se je črka pojavila na katerem indeksu
-        npr. če hočemo indekse črke r, poiščemo tabelo['r']
-        Vem, da se to dela z mapami, ampak vem tudi da so bolj počasne kot tabele
-        */
-
-        char[] crke = "abcdefghijklmnoprstuvz".toCharArray();
-        short[][] mapaStCrk = new short['z' + 1][this.dolzinaBesed];
-
-        for (char crka: crke) {
-            for (char[] beseda: this.filtriraneBesede) {
-                short[]indeksiCrk = vrniVseIndekse(beseda, crka);
-
-                if (indeksiCrk == null) {
-                    continue;
-                }
-
-                for (short indeks: indeksiCrk) {
-                    mapaStCrk[crka][indeks]++;
-                }
-            }
-        }
-
-        return mapaStCrk;
-    }
-
-    public short[] vrniVseIndekse(char[] beseda, char crka) {
-        /*
-        Vrne tabelo short[] vseh indeksov iskane črke v besedi
-        npr. beseda: banana | iskana: a => [1, 3, 5]
-        */
-
-        short stCrk = kolikoVTabeli(beseda, crka);
-
-        if (stCrk == 0) {
-            return null;
-        }
-
-        short[] vsiIndeksi = new short[stCrk];
-
-        short indeksiCounter = 0;
-        for (short i=0; i<beseda.length; i++) {
-            char crkaVBesedi = beseda[i];
-
-            if (crkaVBesedi == crka) {
-                vsiIndeksi[indeksiCounter] = i;
-                indeksiCounter++;
-            }
-        }
-
-        return vsiIndeksi;
     }
 
     public short kolikoVTabeli(char[][] tabela, char[] iskani) {
