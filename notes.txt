@@ -40,3 +40,7 @@ Seed cracking:
 
 Dobi vse možne odzive:
     1) za vsako besedo dobi odziv --> prepočasno
+
+
+brute force first word:
+    "parien" is used for the first 15K words --> will use the optimal too

@@ -1,400 +1,181 @@
 import java.util.*;
 
-public class BruteForce implements Stroj {
-    private char[][] mozniOdzivi;
-    private short[][] mapaOdzivov;
-    private char[][] mozneBesede;
-    private char[][] slovar;
-    private char[][] filtriraneBesede;
-    private char[] prejsnjaIzbira;
-    private short dolzinaBesed;
+public class PreComputeFirstWord {
+    public static void main(String[] args) {
+        char[] possibleLetters = "abcdefghijklmnoprstuvz".toCharArray();
+        char[][] mozniOdzivi = vrniMozneOdzive();
+        char[][] slovar = pretvoriBesede(TestSkupno.preberiSlovar("slovar.txt"));
 
-    @Override
-    public void inicializiraj(Set<String> besedeList) {
-        this.dolzinaBesed = 6;
+//        for (int l1=0; l1<possibleLetters.length; l1++) {
+//            char letter1 = possibleLetters[l1];
+//
+//            for (int l2=0; l2<possibleLetters.length; l2++) {
+//                char letter2 = possibleLetters[l2];
+//                if (l1 == l2) continue;
+//
+//                for (int l3=0; l3<possibleLetters.length; l3++) {
+//                    char letter3 = possibleLetters[l3];
+//                    if (l1 == l3 || l2 == l3) continue;
+//
+//                    for (int l4=0; l4<possibleLetters.length; l4++) {
+//                        char letter4 = possibleLetters[l4];
+//                        if (l1 == l4 || l2 == l4 || l3 == l4) continue;
+//
+//                        for (int l5=0; l5<possibleLetters.length; l5++) {
+//                            char letter5 = possibleLetters[l5];
+//                            if (l1 == l5 || l2 == l5 || l3 == l5 || l4 == l5) continue;
+//
+//                            for (int l6=0; l6<possibleLetters.length; l6++) {
+//                                char letter6 = possibleLetters[l6];
+//                                if (l1 == l6 || l2 == l6 || l3 == l6 || l4 == l6 || l5 == l6) continue;
+//
+//                                char[] word1 = new char[]{letter1, letter2, letter3, letter4, letter5, letter6};
+//
+//                                printScore(slovar, word1);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
-        this.slovar = pretvoriBesede(besedeList);
-        this.mozneBesede = pretvoriBesede(besedeList);
-        this.mozniOdzivi = vrniMozneOdzive();
-        System.out.println("Računam mapo odzivov...");
-        this.mapaOdzivov = vrniMapoOdzivov();
+        for (char[] word1: slovar) {
+            printScore(slovar, word1);
+        }
     }
 
-    @Override
-    public String poteza(List<Character> odzivList) {
-        short num = 100;
+    public static void printScore(char[][] slovar, char[] word1) {
+        System.out.print(new String(word1));
 
-        // Prva poteza
-        if (odzivList == null) {
-            /*
-            Tukaj re-inicializiramo vse spremenljivke (ker dobimo novo besedo) in
-            vrnemo našo prvo besedo
-            */
+        int score = 0;
+        for (char[] word2: slovar) {
+            char[] odziv = izracunajOdziv(word2, word1);
 
-            this.filtriraneBesede = Arrays.copyOf(this.mozneBesede, this.mozneBesede.length);
-
-            if (this.filtriraneBesede.length < num) {
-                return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo2());
+            for (char o: odziv) {
+                switch (o) {
+                    case 'o' -> score += 1;
+                    case '+' -> score += 2;
+                    default -> score += 0;
+                }
             }
-
-            return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
         }
-
-        // pretvorimo tudi odziv v char[]
-        char[] odziv = pretvoriOdziv(odzivList);
-
-        // Smo ugotovili besedo
-        if (kolikoVTabeli(odziv, '+') == this.dolzinaBesed) {
-//            dodajUgotovljenoBesedo();
-            odstaniUgotovljenoBesedo();
-
-            return null;
-        }
-
-        // filtriraj besede
-        this.filtriraneBesede = filtrirajBesede(this.filtriraneBesede, this.prejsnjaIzbira, odziv);
-
-//        System.out.println(Arrays.deepToString(this.filtriraneBesede));
-
-        // vrni optimalno besedo
-        if (this.filtriraneBesede.length < num) {
-            return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo2());
-        }
-
-        return new String(this.prejsnjaIzbira = vrniOptimalnoBesedo());
+        System.out.println(" -> " + score);
     }
 
-    public char[] vrniOptimalnoBesedo2() {
-        long start = System.currentTimeMillis();
-        System.out.println("Računam optimalno besedo...");
-
-        float najOdstrani = 0;
-        short najBesedaIndeks = -1;
-
-        for (short i=0; i<this.filtriraneBesede.length; i++) {
-            if (this.filtriraneBesede[i] == null) {
-                continue;
-            }
-
-            float kolikoBesedOdstrani = kolikoBesedOdstrani(i);
-
-            if (kolikoBesedOdstrani > najOdstrani) {
-                najOdstrani = kolikoBesedOdstrani;
-                najBesedaIndeks = i;
+    public static short index(char[] beseda, char crka) {
+        for (short i=0; i<beseda.length; i++) {
+            if (beseda[i] == crka) {
+                return i;
             }
         }
 
-        long totTime = (System.currentTimeMillis() - start) / 1000;
-
-        System.out.println("Rabil sem " + totTime + " sekund.");
-
-        return this.filtriraneBesede[najBesedaIndeks];
+        return -1;
     }
 
-    public float kolikoBesedOdstrani(short i1) {
-        float odstranjeneBesede = 0;
-
-        short counterBesed = 0;
-        for (short i2=0; i2<this.filtriraneBesede.length; i2++) {
-            if (this.filtriraneBesede[i2] == null) {
-                continue;
-            }
-
-            char[] odziv = mozniOdzivi[this.mapaOdzivov[i1][i2]];
-            char[][] tempBesede = Arrays.copyOf(this.filtriraneBesede, this.filtriraneBesede.length);
-            char[][] filtriraneTemp = filtrirajBesede(tempBesede, this.filtriraneBesede[i1], odziv);
-
-            short razlika = kolikoVTabeli(filtriraneTemp, null);
-
-            odstranjeneBesede += razlika;
-            counterBesed++;
-        }
-
-        return odstranjeneBesede / counterBesed;
-    }
-
-    public char[][] vrniMozneOdzive() {
+    public static char[][] vrniMozneOdzive() {
         // Moj Bog, žal mi je, da sem grešil in žalil tebe, ki si moj najboljši Oče. Trdno sklenem, da se bom poboljšal, pomagaj mi s svojo milostjo. Amen.
         return new char[][]{{'-','-','-','-','-','-'},{'-','-','-','-','-','o'},{'-','-','-','-','-','+'},{'-','-','-','-','o','-'},{'-','-','-','-','o','o'},{'-','-','-','-','o','+'},{'-','-','-','-','+','-'},{'-','-','-','-','+','o'},{'-','-','-','-','+','+'},{'-','-','-','o','-','-'},{'-','-','-','o','-','o'},{'-','-','-','o','-','+'},{'-','-','-','o','o','-'},{'-','-','-','o','o','o'},{'-','-','-','o','o','+'},{'-','-','-','o','+','-'},{'-','-','-','o','+','o'},{'-','-','-','o','+','+'},{'-','-','-','+','-','-'},{'-','-','-','+','-','o'},{'-','-','-','+','-','+'},{'-','-','-','+','o','-'},{'-','-','-','+','o','o'},{'-','-','-','+','o','+'},{'-','-','-','+','+','-'},{'-','-','-','+','+','o'},{'-','-','-','+','+','+'},{'-','-','o','-','-','-'},{'-','-','o','-','-','o'},{'-','-','o','-','-','+'},{'-','-','o','-','o','-'},{'-','-','o','-','o','o'},{'-','-','o','-','o','+'},{'-','-','o','-','+','-'},{'-','-','o','-','+','o'},{'-','-','o','-','+','+'},{'-','-','o','o','-','-'},{'-','-','o','o','-','o'},{'-','-','o','o','-','+'},{'-','-','o','o','o','-'},{'-','-','o','o','o','o'},{'-','-','o','o','o','+'},{'-','-','o','o','+','-'},{'-','-','o','o','+','o'},{'-','-','o','o','+','+'},{'-','-','o','+','-','-'},{'-','-','o','+','-','o'},{'-','-','o','+','-','+'},{'-','-','o','+','o','-'},{'-','-','o','+','o','o'},{'-','-','o','+','o','+'},{'-','-','o','+','+','-'},{'-','-','o','+','+','o'},{'-','-','o','+','+','+'},{'-','-','+','-','-','-'},{'-','-','+','-','-','o'},{'-','-','+','-','-','+'},{'-','-','+','-','o','-'},{'-','-','+','-','o','o'},{'-','-','+','-','o','+'},{'-','-','+','-','+','-'},{'-','-','+','-','+','o'},{'-','-','+','-','+','+'},{'-','-','+','o','-','-'},{'-','-','+','o','-','o'},{'-','-','+','o','-','+'},{'-','-','+','o','o','-'},{'-','-','+','o','o','o'},{'-','-','+','o','o','+'},{'-','-','+','o','+','-'},{'-','-','+','o','+','o'},{'-','-','+','o','+','+'},{'-','-','+','+','-','-'},{'-','-','+','+','-','o'},{'-','-','+','+','-','+'},{'-','-','+','+','o','-'},{'-','-','+','+','o','o'},{'-','-','+','+','o','+'},{'-','-','+','+','+','-'},{'-','-','+','+','+','o'},{'-','-','+','+','+','+'},{'-','o','-','-','-','-'},{'-','o','-','-','-','o'},{'-','o','-','-','-','+'},{'-','o','-','-','o','-'},{'-','o','-','-','o','o'},{'-','o','-','-','o','+'},{'-','o','-','-','+','-'},{'-','o','-','-','+','o'},{'-','o','-','-','+','+'},{'-','o','-','o','-','-'},{'-','o','-','o','-','o'},{'-','o','-','o','-','+'},{'-','o','-','o','o','-'},{'-','o','-','o','o','o'},{'-','o','-','o','o','+'},{'-','o','-','o','+','-'},{'-','o','-','o','+','o'},{'-','o','-','o','+','+'},{'-','o','-','+','-','-'},{'-','o','-','+','-','o'},{'-','o','-','+','-','+'},{'-','o','-','+','o','-'},{'-','o','-','+','o','o'},{'-','o','-','+','o','+'},{'-','o','-','+','+','-'},{'-','o','-','+','+','o'},{'-','o','-','+','+','+'},{'-','o','o','-','-','-'},{'-','o','o','-','-','o'},{'-','o','o','-','-','+'},{'-','o','o','-','o','-'},{'-','o','o','-','o','o'},{'-','o','o','-','o','+'},{'-','o','o','-','+','-'},{'-','o','o','-','+','o'},{'-','o','o','-','+','+'},{'-','o','o','o','-','-'},{'-','o','o','o','-','o'},{'-','o','o','o','-','+'},{'-','o','o','o','o','-'},{'-','o','o','o','o','o'},{'-','o','o','o','o','+'},{'-','o','o','o','+','-'},{'-','o','o','o','+','o'},{'-','o','o','o','+','+'},{'-','o','o','+','-','-'},{'-','o','o','+','-','o'},{'-','o','o','+','-','+'},{'-','o','o','+','o','-'},{'-','o','o','+','o','o'},{'-','o','o','+','o','+'},{'-','o','o','+','+','-'},{'-','o','o','+','+','o'},{'-','o','o','+','+','+'},{'-','o','+','-','-','-'},{'-','o','+','-','-','o'},{'-','o','+','-','-','+'},{'-','o','+','-','o','-'},{'-','o','+','-','o','o'},{'-','o','+','-','o','+'},{'-','o','+','-','+','-'},{'-','o','+','-','+','o'},{'-','o','+','-','+','+'},{'-','o','+','o','-','-'},{'-','o','+','o','-','o'},{'-','o','+','o','-','+'},{'-','o','+','o','o','-'},{'-','o','+','o','o','o'},{'-','o','+','o','o','+'},{'-','o','+','o','+','-'},{'-','o','+','o','+','o'},{'-','o','+','o','+','+'},{'-','o','+','+','-','-'},{'-','o','+','+','-','o'},{'-','o','+','+','-','+'},{'-','o','+','+','o','-'},{'-','o','+','+','o','o'},{'-','o','+','+','o','+'},{'-','o','+','+','+','-'},{'-','o','+','+','+','o'},{'-','o','+','+','+','+'},{'-','+','-','-','-','-'},{'-','+','-','-','-','o'},{'-','+','-','-','-','+'},{'-','+','-','-','o','-'},{'-','+','-','-','o','o'},{'-','+','-','-','o','+'},{'-','+','-','-','+','-'},{'-','+','-','-','+','o'},{'-','+','-','-','+','+'},{'-','+','-','o','-','-'},{'-','+','-','o','-','o'},{'-','+','-','o','-','+'},{'-','+','-','o','o','-'},{'-','+','-','o','o','o'},{'-','+','-','o','o','+'},{'-','+','-','o','+','-'},{'-','+','-','o','+','o'},{'-','+','-','o','+','+'},{'-','+','-','+','-','-'},{'-','+','-','+','-','o'},{'-','+','-','+','-','+'},{'-','+','-','+','o','-'},{'-','+','-','+','o','o'},{'-','+','-','+','o','+'},{'-','+','-','+','+','-'},{'-','+','-','+','+','o'},{'-','+','-','+','+','+'},{'-','+','o','-','-','-'},{'-','+','o','-','-','o'},{'-','+','o','-','-','+'},{'-','+','o','-','o','-'},{'-','+','o','-','o','o'},{'-','+','o','-','o','+'},{'-','+','o','-','+','-'},{'-','+','o','-','+','o'},{'-','+','o','-','+','+'},{'-','+','o','o','-','-'},{'-','+','o','o','-','o'},{'-','+','o','o','-','+'},{'-','+','o','o','o','-'},{'-','+','o','o','o','o'},{'-','+','o','o','o','+'},{'-','+','o','o','+','-'},{'-','+','o','o','+','o'},{'-','+','o','o','+','+'},{'-','+','o','+','-','-'},{'-','+','o','+','-','o'},{'-','+','o','+','-','+'},{'-','+','o','+','o','-'},{'-','+','o','+','o','o'},{'-','+','o','+','o','+'},{'-','+','o','+','+','-'},{'-','+','o','+','+','o'},{'-','+','o','+','+','+'},{'-','+','+','-','-','-'},{'-','+','+','-','-','o'},{'-','+','+','-','-','+'},{'-','+','+','-','o','-'},{'-','+','+','-','o','o'},{'-','+','+','-','o','+'},{'-','+','+','-','+','-'},{'-','+','+','-','+','o'},{'-','+','+','-','+','+'},{'-','+','+','o','-','-'},{'-','+','+','o','-','o'},{'-','+','+','o','-','+'},{'-','+','+','o','o','-'},{'-','+','+','o','o','o'},{'-','+','+','o','o','+'},{'-','+','+','o','+','-'},{'-','+','+','o','+','o'},{'-','+','+','o','+','+'},{'-','+','+','+','-','-'},{'-','+','+','+','-','o'},{'-','+','+','+','-','+'},{'-','+','+','+','o','-'},{'-','+','+','+','o','o'},{'-','+','+','+','o','+'},{'-','+','+','+','+','-'},{'-','+','+','+','+','o'},{'-','+','+','+','+','+'},{'o','-','-','-','-','-'},{'o','-','-','-','-','o'},{'o','-','-','-','-','+'},{'o','-','-','-','o','-'},{'o','-','-','-','o','o'},{'o','-','-','-','o','+'},{'o','-','-','-','+','-'},{'o','-','-','-','+','o'},{'o','-','-','-','+','+'},{'o','-','-','o','-','-'},{'o','-','-','o','-','o'},{'o','-','-','o','-','+'},{'o','-','-','o','o','-'},{'o','-','-','o','o','o'},{'o','-','-','o','o','+'},{'o','-','-','o','+','-'},{'o','-','-','o','+','o'},{'o','-','-','o','+','+'},{'o','-','-','+','-','-'},{'o','-','-','+','-','o'},{'o','-','-','+','-','+'},{'o','-','-','+','o','-'},{'o','-','-','+','o','o'},{'o','-','-','+','o','+'},{'o','-','-','+','+','-'},{'o','-','-','+','+','o'},{'o','-','-','+','+','+'},{'o','-','o','-','-','-'},{'o','-','o','-','-','o'},{'o','-','o','-','-','+'},{'o','-','o','-','o','-'},{'o','-','o','-','o','o'},{'o','-','o','-','o','+'},{'o','-','o','-','+','-'},{'o','-','o','-','+','o'},{'o','-','o','-','+','+'},{'o','-','o','o','-','-'},{'o','-','o','o','-','o'},{'o','-','o','o','-','+'},{'o','-','o','o','o','-'},{'o','-','o','o','o','o'},{'o','-','o','o','o','+'},{'o','-','o','o','+','-'},{'o','-','o','o','+','o'},{'o','-','o','o','+','+'},{'o','-','o','+','-','-'},{'o','-','o','+','-','o'},{'o','-','o','+','-','+'},{'o','-','o','+','o','-'},{'o','-','o','+','o','o'},{'o','-','o','+','o','+'},{'o','-','o','+','+','-'},{'o','-','o','+','+','o'},{'o','-','o','+','+','+'},{'o','-','+','-','-','-'},{'o','-','+','-','-','o'},{'o','-','+','-','-','+'},{'o','-','+','-','o','-'},{'o','-','+','-','o','o'},{'o','-','+','-','o','+'},{'o','-','+','-','+','-'},{'o','-','+','-','+','o'},{'o','-','+','-','+','+'},{'o','-','+','o','-','-'},{'o','-','+','o','-','o'},{'o','-','+','o','-','+'},{'o','-','+','o','o','-'},{'o','-','+','o','o','o'},{'o','-','+','o','o','+'},{'o','-','+','o','+','-'},{'o','-','+','o','+','o'},{'o','-','+','o','+','+'},{'o','-','+','+','-','-'},{'o','-','+','+','-','o'},{'o','-','+','+','-','+'},{'o','-','+','+','o','-'},{'o','-','+','+','o','o'},{'o','-','+','+','o','+'},{'o','-','+','+','+','-'},{'o','-','+','+','+','o'},{'o','-','+','+','+','+'},{'o','o','-','-','-','-'},{'o','o','-','-','-','o'},{'o','o','-','-','-','+'},{'o','o','-','-','o','-'},{'o','o','-','-','o','o'},{'o','o','-','-','o','+'},{'o','o','-','-','+','-'},{'o','o','-','-','+','o'},{'o','o','-','-','+','+'},{'o','o','-','o','-','-'},{'o','o','-','o','-','o'},{'o','o','-','o','-','+'},{'o','o','-','o','o','-'},{'o','o','-','o','o','o'},{'o','o','-','o','o','+'},{'o','o','-','o','+','-'},{'o','o','-','o','+','o'},{'o','o','-','o','+','+'},{'o','o','-','+','-','-'},{'o','o','-','+','-','o'},{'o','o','-','+','-','+'},{'o','o','-','+','o','-'},{'o','o','-','+','o','o'},{'o','o','-','+','o','+'},{'o','o','-','+','+','-'},{'o','o','-','+','+','o'},{'o','o','-','+','+','+'},{'o','o','o','-','-','-'},{'o','o','o','-','-','o'},{'o','o','o','-','-','+'},{'o','o','o','-','o','-'},{'o','o','o','-','o','o'},{'o','o','o','-','o','+'},{'o','o','o','-','+','-'},{'o','o','o','-','+','o'},{'o','o','o','-','+','+'},{'o','o','o','o','-','-'},{'o','o','o','o','-','o'},{'o','o','o','o','-','+'},{'o','o','o','o','o','-'},{'o','o','o','o','o','o'},{'o','o','o','o','o','+'},{'o','o','o','o','+','-'},{'o','o','o','o','+','o'},{'o','o','o','o','+','+'},{'o','o','o','+','-','-'},{'o','o','o','+','-','o'},{'o','o','o','+','-','+'},{'o','o','o','+','o','-'},{'o','o','o','+','o','o'},{'o','o','o','+','o','+'},{'o','o','o','+','+','-'},{'o','o','o','+','+','o'},{'o','o','o','+','+','+'},{'o','o','+','-','-','-'},{'o','o','+','-','-','o'},{'o','o','+','-','-','+'},{'o','o','+','-','o','-'},{'o','o','+','-','o','o'},{'o','o','+','-','o','+'},{'o','o','+','-','+','-'},{'o','o','+','-','+','o'},{'o','o','+','-','+','+'},{'o','o','+','o','-','-'},{'o','o','+','o','-','o'},{'o','o','+','o','-','+'},{'o','o','+','o','o','-'},{'o','o','+','o','o','o'},{'o','o','+','o','o','+'},{'o','o','+','o','+','-'},{'o','o','+','o','+','o'},{'o','o','+','o','+','+'},{'o','o','+','+','-','-'},{'o','o','+','+','-','o'},{'o','o','+','+','-','+'},{'o','o','+','+','o','-'},{'o','o','+','+','o','o'},{'o','o','+','+','o','+'},{'o','o','+','+','+','-'},{'o','o','+','+','+','o'},{'o','o','+','+','+','+'},{'o','+','-','-','-','-'},{'o','+','-','-','-','o'},{'o','+','-','-','-','+'},{'o','+','-','-','o','-'},{'o','+','-','-','o','o'},{'o','+','-','-','o','+'},{'o','+','-','-','+','-'},{'o','+','-','-','+','o'},{'o','+','-','-','+','+'},{'o','+','-','o','-','-'},{'o','+','-','o','-','o'},{'o','+','-','o','-','+'},{'o','+','-','o','o','-'},{'o','+','-','o','o','o'},{'o','+','-','o','o','+'},{'o','+','-','o','+','-'},{'o','+','-','o','+','o'},{'o','+','-','o','+','+'},{'o','+','-','+','-','-'},{'o','+','-','+','-','o'},{'o','+','-','+','-','+'},{'o','+','-','+','o','-'},{'o','+','-','+','o','o'},{'o','+','-','+','o','+'},{'o','+','-','+','+','-'},{'o','+','-','+','+','o'},{'o','+','-','+','+','+'},{'o','+','o','-','-','-'},{'o','+','o','-','-','o'},{'o','+','o','-','-','+'},{'o','+','o','-','o','-'},{'o','+','o','-','o','o'},{'o','+','o','-','o','+'},{'o','+','o','-','+','-'},{'o','+','o','-','+','o'},{'o','+','o','-','+','+'},{'o','+','o','o','-','-'},{'o','+','o','o','-','o'},{'o','+','o','o','-','+'},{'o','+','o','o','o','-'},{'o','+','o','o','o','o'},{'o','+','o','o','o','+'},{'o','+','o','o','+','-'},{'o','+','o','o','+','o'},{'o','+','o','o','+','+'},{'o','+','o','+','-','-'},{'o','+','o','+','-','o'},{'o','+','o','+','-','+'},{'o','+','o','+','o','-'},{'o','+','o','+','o','o'},{'o','+','o','+','o','+'},{'o','+','o','+','+','-'},{'o','+','o','+','+','o'},{'o','+','o','+','+','+'},{'o','+','+','-','-','-'},{'o','+','+','-','-','o'},{'o','+','+','-','-','+'},{'o','+','+','-','o','-'},{'o','+','+','-','o','o'},{'o','+','+','-','o','+'},{'o','+','+','-','+','-'},{'o','+','+','-','+','o'},{'o','+','+','-','+','+'},{'o','+','+','o','-','-'},{'o','+','+','o','-','o'},{'o','+','+','o','-','+'},{'o','+','+','o','o','-'},{'o','+','+','o','o','o'},{'o','+','+','o','o','+'},{'o','+','+','o','+','-'},{'o','+','+','o','+','o'},{'o','+','+','o','+','+'},{'o','+','+','+','-','-'},{'o','+','+','+','-','o'},{'o','+','+','+','-','+'},{'o','+','+','+','o','-'},{'o','+','+','+','o','o'},{'o','+','+','+','o','+'},{'o','+','+','+','+','-'},{'o','+','+','+','+','o'},{'o','+','+','+','+','+'},{'+','-','-','-','-','-'},{'+','-','-','-','-','o'},{'+','-','-','-','-','+'},{'+','-','-','-','o','-'},{'+','-','-','-','o','o'},{'+','-','-','-','o','+'},{'+','-','-','-','+','-'},{'+','-','-','-','+','o'},{'+','-','-','-','+','+'},{'+','-','-','o','-','-'},{'+','-','-','o','-','o'},{'+','-','-','o','-','+'},{'+','-','-','o','o','-'},{'+','-','-','o','o','o'},{'+','-','-','o','o','+'},{'+','-','-','o','+','-'},{'+','-','-','o','+','o'},{'+','-','-','o','+','+'},{'+','-','-','+','-','-'},{'+','-','-','+','-','o'},{'+','-','-','+','-','+'},{'+','-','-','+','o','-'},{'+','-','-','+','o','o'},{'+','-','-','+','o','+'},{'+','-','-','+','+','-'},{'+','-','-','+','+','o'},{'+','-','-','+','+','+'},{'+','-','o','-','-','-'},{'+','-','o','-','-','o'},{'+','-','o','-','-','+'},{'+','-','o','-','o','-'},{'+','-','o','-','o','o'},{'+','-','o','-','o','+'},{'+','-','o','-','+','-'},{'+','-','o','-','+','o'},{'+','-','o','-','+','+'},{'+','-','o','o','-','-'},{'+','-','o','o','-','o'},{'+','-','o','o','-','+'},{'+','-','o','o','o','-'},{'+','-','o','o','o','o'},{'+','-','o','o','o','+'},{'+','-','o','o','+','-'},{'+','-','o','o','+','o'},{'+','-','o','o','+','+'},{'+','-','o','+','-','-'},{'+','-','o','+','-','o'},{'+','-','o','+','-','+'},{'+','-','o','+','o','-'},{'+','-','o','+','o','o'},{'+','-','o','+','o','+'},{'+','-','o','+','+','-'},{'+','-','o','+','+','o'},{'+','-','o','+','+','+'},{'+','-','+','-','-','-'},{'+','-','+','-','-','o'},{'+','-','+','-','-','+'},{'+','-','+','-','o','-'},{'+','-','+','-','o','o'},{'+','-','+','-','o','+'},{'+','-','+','-','+','-'},{'+','-','+','-','+','o'},{'+','-','+','-','+','+'},{'+','-','+','o','-','-'},{'+','-','+','o','-','o'},{'+','-','+','o','-','+'},{'+','-','+','o','o','-'},{'+','-','+','o','o','o'},{'+','-','+','o','o','+'},{'+','-','+','o','+','-'},{'+','-','+','o','+','o'},{'+','-','+','o','+','+'},{'+','-','+','+','-','-'},{'+','-','+','+','-','o'},{'+','-','+','+','-','+'},{'+','-','+','+','o','-'},{'+','-','+','+','o','o'},{'+','-','+','+','o','+'},{'+','-','+','+','+','-'},{'+','-','+','+','+','o'},{'+','-','+','+','+','+'},{'+','o','-','-','-','-'},{'+','o','-','-','-','o'},{'+','o','-','-','-','+'},{'+','o','-','-','o','-'},{'+','o','-','-','o','o'},{'+','o','-','-','o','+'},{'+','o','-','-','+','-'},{'+','o','-','-','+','o'},{'+','o','-','-','+','+'},{'+','o','-','o','-','-'},{'+','o','-','o','-','o'},{'+','o','-','o','-','+'},{'+','o','-','o','o','-'},{'+','o','-','o','o','o'},{'+','o','-','o','o','+'},{'+','o','-','o','+','-'},{'+','o','-','o','+','o'},{'+','o','-','o','+','+'},{'+','o','-','+','-','-'},{'+','o','-','+','-','o'},{'+','o','-','+','-','+'},{'+','o','-','+','o','-'},{'+','o','-','+','o','o'},{'+','o','-','+','o','+'},{'+','o','-','+','+','-'},{'+','o','-','+','+','o'},{'+','o','-','+','+','+'},{'+','o','o','-','-','-'},{'+','o','o','-','-','o'},{'+','o','o','-','-','+'},{'+','o','o','-','o','-'},{'+','o','o','-','o','o'},{'+','o','o','-','o','+'},{'+','o','o','-','+','-'},{'+','o','o','-','+','o'},{'+','o','o','-','+','+'},{'+','o','o','o','-','-'},{'+','o','o','o','-','o'},{'+','o','o','o','-','+'},{'+','o','o','o','o','-'},{'+','o','o','o','o','o'},{'+','o','o','o','o','+'},{'+','o','o','o','+','-'},{'+','o','o','o','+','o'},{'+','o','o','o','+','+'},{'+','o','o','+','-','-'},{'+','o','o','+','-','o'},{'+','o','o','+','-','+'},{'+','o','o','+','o','-'},{'+','o','o','+','o','o'},{'+','o','o','+','o','+'},{'+','o','o','+','+','-'},{'+','o','o','+','+','o'},{'+','o','o','+','+','+'},{'+','o','+','-','-','-'},{'+','o','+','-','-','o'},{'+','o','+','-','-','+'},{'+','o','+','-','o','-'},{'+','o','+','-','o','o'},{'+','o','+','-','o','+'},{'+','o','+','-','+','-'},{'+','o','+','-','+','o'},{'+','o','+','-','+','+'},{'+','o','+','o','-','-'},{'+','o','+','o','-','o'},{'+','o','+','o','-','+'},{'+','o','+','o','o','-'},{'+','o','+','o','o','o'},{'+','o','+','o','o','+'},{'+','o','+','o','+','-'},{'+','o','+','o','+','o'},{'+','o','+','o','+','+'},{'+','o','+','+','-','-'},{'+','o','+','+','-','o'},{'+','o','+','+','-','+'},{'+','o','+','+','o','-'},{'+','o','+','+','o','o'},{'+','o','+','+','o','+'},{'+','o','+','+','+','-'},{'+','o','+','+','+','o'},{'+','o','+','+','+','+'},{'+','+','-','-','-','-'},{'+','+','-','-','-','o'},{'+','+','-','-','-','+'},{'+','+','-','-','o','-'},{'+','+','-','-','o','o'},{'+','+','-','-','o','+'},{'+','+','-','-','+','-'},{'+','+','-','-','+','o'},{'+','+','-','-','+','+'},{'+','+','-','o','-','-'},{'+','+','-','o','-','o'},{'+','+','-','o','-','+'},{'+','+','-','o','o','-'},{'+','+','-','o','o','o'},{'+','+','-','o','o','+'},{'+','+','-','o','+','-'},{'+','+','-','o','+','o'},{'+','+','-','o','+','+'},{'+','+','-','+','-','-'},{'+','+','-','+','-','o'},{'+','+','-','+','-','+'},{'+','+','-','+','o','-'},{'+','+','-','+','o','o'},{'+','+','-','+','o','+'},{'+','+','-','+','+','-'},{'+','+','-','+','+','o'},{'+','+','-','+','+','+'},{'+','+','o','-','-','-'},{'+','+','o','-','-','o'},{'+','+','o','-','-','+'},{'+','+','o','-','o','-'},{'+','+','o','-','o','o'},{'+','+','o','-','o','+'},{'+','+','o','-','+','-'},{'+','+','o','-','+','o'},{'+','+','o','-','+','+'},{'+','+','o','o','-','-'},{'+','+','o','o','-','o'},{'+','+','o','o','-','+'},{'+','+','o','o','o','-'},{'+','+','o','o','o','o'},{'+','+','o','o','o','+'},{'+','+','o','o','+','-'},{'+','+','o','o','+','o'},{'+','+','o','o','+','+'},{'+','+','o','+','-','-'},{'+','+','o','+','-','o'},{'+','+','o','+','-','+'},{'+','+','o','+','o','-'},{'+','+','o','+','o','o'},{'+','+','o','+','o','+'},{'+','+','o','+','+','-'},{'+','+','o','+','+','o'},{'+','+','o','+','+','+'},{'+','+','+','-','-','-'},{'+','+','+','-','-','o'},{'+','+','+','-','-','+'},{'+','+','+','-','o','-'},{'+','+','+','-','o','o'},{'+','+','+','-','o','+'},{'+','+','+','-','+','-'},{'+','+','+','-','+','o'},{'+','+','+','-','+','+'},{'+','+','+','o','-','-'},{'+','+','+','o','-','o'},{'+','+','+','o','-','+'},{'+','+','+','o','o','-'},{'+','+','+','o','o','o'},{'+','+','+','o','o','+'},{'+','+','+','o','+','-'},{'+','+','+','o','+','o'},{'+','+','+','o','+','+'},{'+','+','+','+','-','-'},{'+','+','+','+','-','o'},{'+','+','+','+','-','+'},{'+','+','+','+','o','-'},{'+','+','+','+','o','o'},{'+','+','+','+','o','+'},{'+','+','+','+','+','-'},{'+','+','+','+','+','o'},{'+','+','+','+','+','+'}};
     }
 
-    public short[][] vrniMapoOdzivov() {
-        short[][] mapa = new short[this.mozneBesede.length][this.mozneBesede.length];
+    public static short izracunajOdzivIndex(char[] pravaPar, char[] izbranaPar) {
+        char[] prava = Arrays.copyOf(pravaPar, pravaPar.length);
+        char[] izbrana = Arrays.copyOf(izbranaPar, izbranaPar.length);
 
-        for (short i=0; i<this.mozneBesede.length; i++) {
-            for (short j=0; j<this.mozneBesede.length; j++) {
-                char[] odziv = pretvoriOdziv(TestSkupno.izracunajOdziv(new String(this.mozneBesede[i]), new String(this.mozneBesede[j])));
-                mapa[i][j] = dobiIndex(mozniOdzivi, odziv);
+        // Preverimo <null>, dolžino in sestavo (<izbrana> lahko vsebuje samo
+        // male črke slovenske abecede).
+
+        if (6 != izbrana.length) {
+            throw new TestSkupno.WordleIzjema(String.format("Metoda <poteza> je vrnila besedo napačne dolžine (%d).", izbrana.length));
+        }
+
+        for (int i = 0; i < 6; i++) {
+            char znak = izbrana[i];
+            if (TestSkupno.ABECEDA.indexOf(znak) < 0) {
+                throw new TestSkupno.WordleIzjema(String.format("Metoda <poteza> je vrnila besedo z neveljavnim znakom (%c).", znak));
             }
         }
 
-        return mapa;
-    }
+        short odzivIndeks = 0;
 
-    public short[][]vrniMapoOdzivovPreCompile() {
-        return null;
-    }
-
-    public char[] vrniOptimalnoBesedo() {
-        // indeks števila predstavlja ascii code char-a
-        int[][] mapaStCrk = vrniMapoStCrk();
-        char[] najCrke = new char[this.dolzinaBesed];
-
-        int najCrkeCounter = 0;
-        for (int i=0; i<this.dolzinaBesed; i++) {
-            char najCrka = 0;
-            int najPojav = -1;
-
-            for (char crka='a'; crka<='z'; crka++) {
-                if (kolikoVTabeli(najCrke, crka) > 0 && !moramRabimIstoCrko()) {
-                    continue;
-                }
-
-                int[] stCrk = mapaStCrk[crka];
-
-                if (stCrk[i] > najPojav) {
-                    najPojav = stCrk[i];
-                    najCrka = crka;
-                }
-            }
-
-            najCrke[najCrkeCounter] = najCrka;
-            najCrkeCounter++;
-        }
-
-        return najCrke;
-    }
-
-    public boolean moramRabimIstoCrko() {
-        for (char[] beseda: this.filtriraneBesede) {
-            if (!imaPonavljajoceCrke(beseda)) {
-                return false;
+        for (int i = 0; i < 6; i++) {
+            if (prava[i] == izbrana[i]) {
+                odzivIndeks += (short) (2 * Math.pow(3, 6 - 1 - i));
+                prava[i] = '#';
+                izbrana[i] = '_';
             }
         }
 
-        return true;
-    }
+        // Poiščemo pravilne črke na napačnih mestih.
 
-    public boolean imaPonavljajoceCrke(char[] beseda) {
-        for (int i=0; i<beseda.length; i++) {
-            for (int j=0; j<beseda.length; j++) {
-                if (i == j) {
-                    continue;
-                }
-
-                if (beseda[i] == beseda[j]) {
-                    return true;
+        for (int ixIzbrana = 0; ixIzbrana < 6; ixIzbrana++) {
+            char crka = izbrana[ixIzbrana];
+            if (crka != '_') {
+                int ixPrava = index(prava, crka);
+                if (ixPrava >= 0) {
+                    odzivIndeks += (short) (1 * Math.pow(3, 6 - 1 - ixIzbrana));
+                    prava[ixPrava] = '#';
+                    izbrana[ixIzbrana] = '_';
                 }
             }
         }
 
-        return false;
+        return odzivIndeks;
     }
 
-    public int[][] vrniMapoStCrk() {
-        char[] crke = "abcdefghijklmnoprstuvz".toCharArray();
-        int[][] mapaStCrk = new int['z' + 1][this.dolzinaBesed];
+    public static char[] izracunajOdziv(char[] pravaPar, char[] izbranaPar) {
+        char[] prava = Arrays.copyOf(pravaPar, pravaPar.length);
+        char[] izbrana = Arrays.copyOf(izbranaPar, izbranaPar.length);
 
-        for (char crka: crke) {
-            for (char[] beseda: this.filtriraneBesede) {
-                int[]indeksiCrk = vrniVseIndekse(beseda, crka);
+        if (6 != izbrana.length) {
+            throw new TestSkupno.WordleIzjema(String.format("Metoda <poteza> je vrnila besedo napačne dolžine (%d).", izbrana.length));
+        }
 
-                if (indeksiCrk == null) {
-                    continue;
-                }
-
-                for (int indeks: indeksiCrk) {
-                    mapaStCrk[crka][indeks]++;
-                }
+        for (int i = 0; i < 6; i++) {
+            char znak = izbrana[i];
+            if (TestSkupno.ABECEDA.indexOf(znak) < 0) {
+                throw new TestSkupno.WordleIzjema(String.format("Metoda <poteza> je vrnila besedo z neveljavnim znakom (%c).", znak));
             }
         }
 
-        return mapaStCrk;
-    }
+        char[] odziv = "------".toCharArray();
 
-    public int[] vrniVseIndekse(char[] beseda, char crka) {
-        int stCrk = kolikoVTabeli(beseda, crka);
-
-        if (stCrk == 0) {
-            return null;
-        }
-
-        int[] vsiIndeksi = new int[stCrk];
-
-        int indeksiCounter = 0;
-        for (int i=0; i<beseda.length; i++) {
-            char crkaVBesedi = beseda[i];
-
-            if (crkaVBesedi == crka) {
-                vsiIndeksi[indeksiCounter] = i;
-                indeksiCounter++;
+        for (int i = 0; i < 6; i++) {
+            if (prava[i] == izbrana[i]) {
+                odziv[i] = '+';
+                prava[i] = '#';
+                izbrana[i] = '_';
             }
         }
 
-        return vsiIndeksi;
-    }
-
-    public static char[] pretvoriOdziv(List<Character> odzivSeznam) {
-        char[] odziv = new char[6];
-
-        for (int i=0; i<6; i++) {
-            odziv[i] = odzivSeznam.get(i);
+        for (int ixIzbrana = 0; ixIzbrana < 6; ixIzbrana++) {
+            char crka = izbrana[ixIzbrana];
+            if (crka != '_') {
+                int ixPrava = index(prava, crka);
+                if (ixPrava >= 0) {
+                    odziv[ixIzbrana] = 'o';
+                    prava[ixPrava] = '#';
+                    izbrana[ixIzbrana] = '_';
+                }
+            }
         }
 
         return odziv;
     }
 
-    public static short dobiIndex(char[][] tabela, char[] odziv) {
-
-        for (short i=0; i<tabela.length; i++) {
-            if (Arrays.equals(tabela[i], odziv)) {
-                return i;
-            }
-        }
-
-        throw new RuntimeException("se ne bi smelo zgoditi :(");
-    }
-
     public static char[][] pretvoriBesede(Set<String> besede) {
+        /*
+        pretvorimo Set<String> v 2D char tabelo zaradi hitrosti
+        */
+
         int stBesed = besede.size();
         char[][] tabelaBesed = new char[stBesed][6];
 
-        int indeks = 0;
+        short indeks = 0;
         for (String beseda: besede) {
             tabelaBesed[indeks] = beseda.toCharArray();
             indeks++;
         }
 
         return tabelaBesed;
-    }
-
-    public short kolikoVTabeli(char[] tabela, char iskani) {
-        short stevilo = 0;
-
-        for (char element: tabela) {
-            if (element == iskani) {
-                stevilo++;
-            }
-        }
-
-        return stevilo;
-    }
-
-    public short kolikoVTabeli(char[][] tabela, char[] iskani) {
-        short stevilo = 0;
-
-        for (char[] element: tabela) {
-            if (Arrays.equals(element, iskani)) {
-                stevilo++;
-            }
-        }
-
-        return stevilo;
-    }
-
-    public void odstaniUgotovljenoBesedo() {
-        for (int i=0; i<this.mozneBesede.length; i++) {
-            if (Arrays.equals(this.mozneBesede[i], this.prejsnjaIzbira)) {
-                this.mozneBesede[i] = null;
-                break;
-            }
-        }
-
-        this.mozneBesede = odstraniVseNull(this.mozneBesede);
-    }
-
-    public char[][] odstraniVseNull(char[][] seznam) {
-        int stNull = kolikoVTabeli(seznam, null);
-        int novaDolzina = seznam.length - stNull;
-        char[][] novaTabela = new char[novaDolzina][this.dolzinaBesed];
-
-        int counterNove = 0;
-        for (char[] beseda : seznam) {
-            if (beseda == null) {
-                continue;
-            }
-
-            novaTabela[counterNove] = beseda;
-            counterNove++;
-        }
-
-        return novaTabela;
-    }
-
-    public char[][] filtrirajBesede(char[][] besede, char[] prejsnjaBeseda, char[] odziv) {
-        char[] pravilneCrke = new char[this.dolzinaBesed];
-        char[] ugodneCrke = new char[this.dolzinaBesed];
-        char[] napacneCrke = new char[this.dolzinaBesed];
-
-        for (int i=0; i<odziv.length; i++) {
-            char znak = odziv[i];
-
-            switch (znak) {
-                case '+':
-                    pravilneCrke[i] = prejsnjaBeseda[i];
-                    break;
-                case 'o':
-                    ugodneCrke[i] = prejsnjaBeseda[i];
-                    break;
-                case '-':
-                    napacneCrke[i] = prejsnjaBeseda[i];
-                    break;
-            }
-        }
-
-        outer:
-        for (int i=0; i<besede.length; i++) {
-            char[] beseda = besede[i];
-
-            // pravilne črke
-            for (int j = 0; j < pravilneCrke.length; j++) {
-                char pravilnaCrka = pravilneCrke[j];
-
-                if (pravilnaCrka == 0) {
-                    continue;
-                }
-
-                if (pravilnaCrka != beseda[j]) {
-                    besede[i] = null;
-                    continue outer;
-                }
-            }
-
-            // ugodne črke
-            for (int j = 0; j < ugodneCrke.length; j++) {
-                char ugodnaCrka = ugodneCrke[j];
-
-                if (ugodnaCrka == 0) {
-                    continue;
-                }
-
-                // odstrani besedo, če ima ugodno črko na istem indeksu
-                if (ugodnaCrka == beseda[j]) {
-                    besede[i] = null;
-                    continue outer;
-                }
-
-                // odstrani besedo, če ima manj ugodnih črk kakor jih je v odzivu
-                if (kolikoVTabeli(beseda, ugodnaCrka) < kolikoVTabeli(ugodneCrke, ugodnaCrka)) {
-                    besede[i] = null;
-                    continue outer;
-                }
-            }
-
-            // napačne črke
-            for (char napacnaCrka : napacneCrke) {
-                if (napacnaCrka == 0) {
-                    continue;
-                }
-
-                // odstrani besedo, če ima napačno črko (ki ni pravilna ali ugodna)
-                if (kolikoVTabeli(pravilneCrke, napacnaCrka) + kolikoVTabeli(ugodneCrke, napacnaCrka) < kolikoVTabeli(beseda, napacnaCrka)) {
-                    besede[i] = null;
-                    continue outer;
-                }
-            }
-        }
-
-        return besede;
     }
 }

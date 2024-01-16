@@ -14,6 +14,7 @@ public class Tekm_63230387 implements Stroj {
     private short stBesedZaSeed;
     private boolean seedJeBilZgresen;
     private int crackingSeconds;
+    private int isciDobroThreshold;
 
     @Override
     public void inicializiraj(Set<String> besede) {
@@ -23,7 +24,8 @@ public class Tekm_63230387 implements Stroj {
 
         this.dolzinaBesed = 6;
         this.stBesedZaSeed = 12;
-        this.crackingSeconds = 7 * 60;
+        this.crackingSeconds = -1;
+        this.isciDobroThreshold = 1000;
 
         this.semUgotovilSeed = false;
         this.seedJeBilZgresen = false;
@@ -44,7 +46,6 @@ public class Tekm_63230387 implements Stroj {
             crackSeed();
         }
 
-
         // Prva poteza
         if (odzivSeznam == null) {
             /*
@@ -58,7 +59,13 @@ public class Tekm_63230387 implements Stroj {
                 return new String(this.prejsnjaIzbira = vrniZnanoBesedo());
             }
 
-            return new String(this.prejsnjaIzbira = vrniBesedo_popularneCrkeNaIndeksu());
+            // če dam več kot 750 postane dokaj pocasno
+            if (this.zacetneBesede.length > 750) {
+                char[] beseda = "kornea".toCharArray();
+                return new String(this.prejsnjaIzbira = beseda);
+            }
+
+            return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
         }
 
         // pretvorimo tudi odziv v char[]
@@ -91,7 +98,6 @@ public class Tekm_63230387 implements Stroj {
         }
 
         // odstranimo besede, ki niso več relevantne
-
         this.filtriraneBesede = filtrirajBesede(this.filtriraneBesede,this.prejsnjaIzbira , odziv);
 
         if (this.filtriraneBesede.length == 0) {
@@ -107,8 +113,8 @@ public class Tekm_63230387 implements Stroj {
             return new String(this.prejsnjaIzbira = vrniBesedo_iskaneCrke(razlike));
         }
 
-        if (this.filtriraneBesede.length < 6) {
-            return new String(this.prejsnjaIzbira = vrniBesedo_bruteForce());
+        if (this.filtriraneBesede.length < this.isciDobroThreshold) {
+            return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
         }
 
         return new String(this.prejsnjaIzbira = vrniBesedo_popularneCrkeNaIndeksu());
@@ -123,11 +129,15 @@ public class Tekm_63230387 implements Stroj {
         boolean[] razlike = vrniTabeloRazlik();
         short stRazlik = kolikoVTabeli(razlike, true);
 
+        if (stRazlik < 1) {
+            return null;
+        }
+
         // testiraj katera možnost je najboljsa
 
         // TODO za zdaj se zdi, da stRazlik je najboljše <= 4 in količina besed > (2 stRazlik)
         // TODO ne vem pa še če je to to... morda lahko še kaj optimiziram
-        if (stRazlik <= 4 && stRazlik >= 1 && this.filtriraneBesede.length > (2 * stRazlik)) {
+        if (stRazlik <= 4 && this.filtriraneBesede.length > (2 * stRazlik)) {
             return razlike;
         }
 
@@ -180,7 +190,7 @@ public class Tekm_63230387 implements Stroj {
         while (System.currentTimeMillis() < end) {
             sign:
             for (short sign=-1; sign<=1; sign+=2) {
-                Random random = new Random(seedCounter * sign);
+                Random random = new Random((long) seedCounter * sign);
                 char[][] besede = Arrays.copyOf(this.slovar, this.slovar.length);
 
                 // shuffle array
@@ -221,8 +231,6 @@ public class Tekm_63230387 implements Stroj {
             System.out.printf("Na žalost ga nisem dobil :(%nPoiskal sem le semena od -%d do %d%n%n", Math.abs(seedCounter), Math.abs(seedCounter));
             this.seedJeBilZgresen = true;
         }
-
-        System.exit(-1);
     }
 
     public boolean[] vrniTabeloRazlik() {
@@ -351,32 +359,6 @@ public class Tekm_63230387 implements Stroj {
         return najCrke;
     }
 
-    public char[] vrniBesedo_bruteForce() {
-        // vsi guess bojo samo obstoječe besede (ker vseh možnih kombinacij črk je 22^6 :')
-        double[] povprecnoBesedManj = new double[this.filtriraneBesede.length];
-
-        for (int i=0; i<this.filtriraneBesede.length; i++) {
-            char[] beseda = this.filtriraneBesede[i];
-            char[][] mozniOdzivi = vrniMozneOdzive(beseda);
-            int[] stStevilBesedManj = new int[mozniOdzivi.length];
-
-            for (int j = 0; j < mozniOdzivi.length; j++) {
-                char[] mozenOdziv = mozniOdzivi[j];
-                int stBesedManj = kolikoBesedOdstrani(beseda, mozenOdziv);
-
-                stStevilBesedManj[j] = stBesedManj;
-            }
-
-            double povprecje = povprecje(stStevilBesedManj);
-            povprecnoBesedManj[i] = povprecje;
-        }
-
-        double najvecBesedManj = max(povprecnoBesedManj);
-        int indeksNajBesede = dobiIndex(povprecnoBesedManj, najvecBesedManj);
-
-        return this.filtriraneBesede[indeksNajBesede];
-    }
-
     public char[] vrniBesedo_iskaneCrke(boolean[] razlike) {
         /*
         Ustvarimo tabelo, ki vsebuje črke, ki nam bodo povedale katera je manjkakoča črka
@@ -416,50 +398,19 @@ public class Tekm_63230387 implements Stroj {
         return besedaZaIskanje;
     }
 
-    public char[][] vrniMozneOdzive(char[] zacetnaBeseda) {
-        /*
-        vrne seznam vseh možnih odzivov in njihovo pogostost glede na začetno besedo
-        */
+    public char[] vrniBesedo_tockujOdziv() {
+        char[] najBeseda = "aaaaaa".toCharArray();
+        int najTocke = -1;
 
-        // seveda rabi this.filtriraneBesede
-        char[][] mozniOdzivi = new char[0][this.dolzinaBesed];
         for (char[] beseda: this.filtriraneBesede) {
-            char[] odziv = pretvoriOdziv(TestSkupno.izracunajOdziv(new String(zacetnaBeseda), new String(beseda)));
-            mozniOdzivi = dodajVTabeloCeNiZe(mozniOdzivi, odziv);
-        }
-
-        return mozniOdzivi;
-    }
-
-    public char[][] dodajVTabeloCeNiZe(char[][] mozniOdzivi, char[] odziv) {
-        for (char[] odziv2: mozniOdzivi) {
-            if (odziv2 == odziv) {
-                return mozniOdzivi;
+            int tocke = vrniTocke(this.filtriraneBesede, beseda);
+            if (tocke > najTocke) {
+                najTocke = tocke;
+                najBeseda = beseda;
             }
         }
 
-        char[][] mozniOdzivi2 = new char[mozniOdzivi.length + 1][this.dolzinaBesed];
-        mozniOdzivi2[mozniOdzivi.length] = odziv;
-
-        return mozniOdzivi2;
-    }
-
-    public int kolikoBesedOdstrani(char[] beseda, char[] odziv) {
-        char[][] tempBesede = Arrays.copyOf(this.filtriraneBesede, this.filtriraneBesede.length);
-
-        char[][] filtriraneTemp = filtrirajBesede(tempBesede, beseda, odziv);
-
-        return tempBesede.length - filtriraneTemp.length;
-    }
-
-    public double povprecje(int[] tabela) {
-        double vsota = 0;
-
-        for (int st: tabela) {
-            vsota += st;
-        }
-
-        return vsota / tabela.length;
+        return najBeseda;
     }
 
     public double max(double[] tabela) {
@@ -637,13 +588,62 @@ public class Tekm_63230387 implements Stroj {
         return novaTabela;
     }
 
-    public int dobiIndex(double[] tabela, double iskani) {
-        /*
-        Vrne prvi indeks iskane črke v besedi (ali pa -1 če črke v besedi ni)
-        */
+    public char[][] filtrirajBesede(char[][] besede, char[] prejsnjaBeseda, char[] odziv) {
+        for (int i=0; i<besede.length; i++) {
+            char[] odziv2 = izracunajOdziv(besede[i], prejsnjaBeseda);
+            if (Arrays.equals(odziv2, odziv)) {
+                continue;
+            }
 
-        for (int i=0; i<tabela.length; i++) {
-            if (tabela[i] == iskani) {
+            besede[i] = null;
+        }
+
+        return odstraniVseNull(besede);
+    }
+
+    public static char[] izracunajOdziv(char[] pravaPar, char[] izbranaPar) {
+        char[] prava = Arrays.copyOf(pravaPar, pravaPar.length);
+        char[] izbrana = Arrays.copyOf(izbranaPar, izbranaPar.length);
+
+        if (6 != izbrana.length) {
+            throw new TestSkupno.WordleIzjema(String.format("Metoda <poteza> je vrnila besedo napačne dolžine (%d).", izbrana.length));
+        }
+
+        for (int i = 0; i < 6; i++) {
+            char znak = izbrana[i];
+            if (TestSkupno.ABECEDA.indexOf(znak) < 0) {
+                throw new TestSkupno.WordleIzjema(String.format("Metoda <poteza> je vrnila besedo z neveljavnim znakom (%c).", znak));
+            }
+        }
+
+        char[] odziv = "------".toCharArray();
+
+        for (int i = 0; i < 6; i++) {
+            if (prava[i] == izbrana[i]) {
+                odziv[i] = '+';
+                prava[i] = '#';
+                izbrana[i] = '_';
+            }
+        }
+
+        for (int ixIzbrana = 0; ixIzbrana < 6; ixIzbrana++) {
+            char crka = izbrana[ixIzbrana];
+            if (crka != '_') {
+                int ixPrava = index(prava, crka);
+                if (ixPrava >= 0) {
+                    odziv[ixIzbrana] = 'o';
+                    prava[ixPrava] = '#';
+                    izbrana[ixIzbrana] = '_';
+                }
+            }
+        }
+
+        return odziv;
+    }
+
+    public static short index(char[] beseda, char crka) {
+        for (short i=0; i<beseda.length; i++) {
+            if (beseda[i] == crka) {
                 return i;
             }
         }
@@ -651,90 +651,24 @@ public class Tekm_63230387 implements Stroj {
         return -1;
     }
 
-    public char[][] filtrirajBesede(char[][] besede, char[] prejsnjaBeseda, char[] odziv) {
-        /*
-        1) odstrani vse besede, ki nimajo pravilnih črk
-        2) odstrani vse besede, ki:
-            > nimajo ugodne črke (pazi na pravilne črke ;-;)
-            > imajo ugodno črko na istem mestu kot odziv
-            > imajo manj ugodnih črk kot odziv (seveda pa je treba šteti tudi pravilne črke ;-;)
+    public static int vrniTocke(char[][] besede, char[] beseda1) {
+        int score = 0;
+        for (char[] beseda2: besede) {
+            char[] odziv = izracunajOdziv(beseda2, beseda1);
 
-         NEVEMMMM MORDA SE DA TIPO ŠTET AL NEVEM KAJ
-         */
+            // 12: 3.3684
+            // 23: 3.3664
+            // 34: 3.3685
 
-        char[] pravilneCrke = new char[this.dolzinaBesed];
-        char[] ugodneCrke = new char[this.dolzinaBesed];
-        char[] napacneCrke = new char[this.dolzinaBesed];
-
-        for (int i=0; i<odziv.length; i++) {
-            char znak = odziv[i];
-
-            switch (znak) {
-                case '+':
-                    pravilneCrke[i] = prejsnjaBeseda[i];
-                    break;
-                case 'o':
-                    ugodneCrke[i] = prejsnjaBeseda[i];
-                    break;
-                case '-':
-                    napacneCrke[i] = prejsnjaBeseda[i];
-                    break;
-            }
-        }
-
-        outer:
-        for (int i=0; i<besede.length; i++) {
-            char[] beseda = besede[i];
-
-            // pravilne črke
-            for (int j = 0; j < pravilneCrke.length; j++) {
-                char pravilnaCrka = pravilneCrke[j];
-
-                if (pravilnaCrka == 0) {
-                    continue;
-                }
-
-                if (pravilnaCrka != beseda[j]) {
-                    besede[i] = null;
-                    continue outer;
-                }
-            }
-
-            // ugodne črke
-            for (int j = 0; j < ugodneCrke.length; j++) {
-                char ugodnaCrka = ugodneCrke[j];
-
-                if (ugodnaCrka == 0) {
-                    continue;
-                }
-
-                // odstrani besedo, če ima ugodno črko na istem indeksu
-                if (ugodnaCrka == beseda[j]) {
-                    besede[i] = null;
-                    continue outer;
-                }
-
-                // odstrani besedo, če ima manj ugodnih črk kakor jih je v odzivu
-                if (kolikoVTabeli(beseda, ugodnaCrka) < kolikoVTabeli(ugodneCrke, ugodnaCrka)) {
-                    besede[i] = null;
-                    continue outer;
-                }
-            }
-
-            // napačne črke
-            for (char napacnaCrka : napacneCrke) {
-                if (napacnaCrka == 0) {
-                    continue;
-                }
-
-                // odstrani besedo, če ima napačno črko (ki ni pravilna ali ugodna)
-                if (kolikoVTabeli(pravilneCrke, napacnaCrka) + kolikoVTabeli(ugodneCrke, napacnaCrka) < kolikoVTabeli(beseda, napacnaCrka)) {
-                    besede[i] = null;
-                    continue outer;
+            for (char o: odziv) {
+                switch (o) {
+                    case 'o' -> score += 2;
+                    case '+' -> score += 3;
+                    default -> score += 0;
                 }
             }
         }
 
-        return odstraniVseNull(besede);
+        return score;
     }
 }
