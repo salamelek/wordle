@@ -21,6 +21,7 @@ public class Tekm_63230387 implements Stroj {
     private short stBesedZaSeed;
     private boolean seedJeBilZgresen;
     private int crackingSeconds;
+    private long zacetek;
 
     @Override
     public void inicializiraj(Set<String> besede) {
@@ -31,6 +32,8 @@ public class Tekm_63230387 implements Stroj {
         this.dolzinaBesed = 6;
         this.stBesedZaSeed = 30;
         this.crackingSeconds = 10;
+
+        this.zacetek = System.currentTimeMillis();
 
         this.semUgotovilSeed = false;
         this.seedJeBilZgresen = false;
@@ -48,7 +51,8 @@ public class Tekm_63230387 implements Stroj {
 
         // SEED CRACKING
         if (this.ugotovljeneBesede.length == this.stBesedZaSeed && !this.semUgotovilSeed && !this.seedJeBilZgresen) {
-            crackSeed();
+            long konec = System.currentTimeMillis();
+            crackSeed(konec - this.zacetek);
         }
 
         // Prva poteza
@@ -173,13 +177,20 @@ public class Tekm_63230387 implements Stroj {
         return this.pravilneBesede[this.pravilneBesedeCounter - 1];
     }
 
-    public void crackSeed() {
+    public void crackSeed(long razlikaCasa) {
         /*
         Ko dosežemo želeno število ugotovljenih besed (this.stBesedZaSeed) začnemo s seed crackingom
         Dokler imamo še kaj časa, preverimo vsa možna števila od 0 do kolikor pač nam uspe.
         Za vsak kandidat semena preverimo, če bi bilo prvih n členov enakih s novo premešanim slovarjem
         */
 
+        System.out.println(razlikaCasa + "ms");
+        long casNaBesedo = razlikaCasa / this.stBesedZaSeed;
+        System.out.println("na besedo: " + casNaBesedo + "ms");
+        // to bo reklo precej več časa, ker potem se pospeši
+        System.out.println("estimated za vse besede: " + (casNaBesedo * (this.slovar.length - this.stBesedZaSeed) / 1000.) + "s");
+
+        // TODO settaj čas bruteforce glede na prvih n besed
         System.out.printf("%n'Investiram' %d sekund za iskanje semena...%n", this.crackingSeconds);
 
         long start = System.currentTimeMillis();
