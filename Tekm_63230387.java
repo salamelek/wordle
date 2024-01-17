@@ -68,7 +68,6 @@ public class Tekm_63230387 implements Stroj {
             if (this.zacetneBesede.length < 750) {
                 return new String(this.prejsnjaIzbira = vrniBesedo_tockujOdziv());
             } else {
-                // TODO check if kornea is really the word (use 23 and 12)
                 char[] beseda = "kornea".toCharArray();
                 return new String(this.prejsnjaIzbira = beseda);
             }
@@ -518,8 +517,7 @@ public class Tekm_63230387 implements Stroj {
             char[] odziv = izracunajOdziv(beseda2, beseda1);
 
             // 12: 3.3684
-            // 23: 3.3664
-            // 34: 3.3685
+            // 23: 3.3657
 
             for (char o: odziv) {
                 switch (o) {
