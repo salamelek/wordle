@@ -29,8 +29,8 @@ public class Tekm_63230387 implements Stroj {
         */
 
         this.dolzinaBesed = 6;
-        this.stBesedZaSeed = 12;
-        this.crackingSeconds = -1;
+        this.stBesedZaSeed = 30;
+        this.crackingSeconds = 10;
 
         this.semUgotovilSeed = false;
         this.seedJeBilZgresen = false;
@@ -176,7 +176,7 @@ public class Tekm_63230387 implements Stroj {
     public void crackSeed() {
         /*
         Ko dosežemo želeno število ugotovljenih besed (this.stBesedZaSeed) začnemo s seed crackingom
-        Dokler imamo še kaj časa, preverimo vsa možna števila od 0 do kolikor pač nam uspe. (bodisi v plus kot v minus)
+        Dokler imamo še kaj časa, preverimo vsa možna števila od 0 do kolikor pač nam uspe.
         Za vsak kandidat semena preverimo, če bi bilo prvih n členov enakih s novo premešanim slovarjem
         */
 
@@ -185,51 +185,49 @@ public class Tekm_63230387 implements Stroj {
         long start = System.currentTimeMillis();
         long end = start + this.crackingSeconds * 1000L;
 
-        int seedCounter = 0;
+        int seedCounter = -1;
 
         outer:
         while (System.currentTimeMillis() < end) {
-            sign:
-            for (short sign=-1; sign<=1; sign+=2) {
-                Random random = new Random((long) seedCounter * sign);
-                char[][] besede = Arrays.copyOf(this.slovar, this.slovar.length);
+            seedCounter++;
+            Random random = new Random(seedCounter);
+            char[][] besede = Arrays.copyOf(this.slovar, this.slovar.length);
 
-                // shuffle array
-                for (int i=besede.length - 1; i>0; i--) {
-                    int randInt = random.nextInt(i + 1);
 
-                    char[] tmp = besede[i];
-                    besede[i] = besede[randInt];
-                    besede[randInt] = tmp;
+            // shuffle array
+            for (int i=besede.length - 1; i>0; i--) {
+                int randInt = random.nextInt(i + 1);
 
-                    // če vzamemo eno od začetnih besed, prekinemo
-                    // (~3X faster), (stBesedZaSeed / slovar.length) loss ~~> 0.000625 seed loss
-                    if (i > this.stBesedZaSeed && kolikoVTabeli(this.ugotovljeneBesede, besede[i]) > 0) {
-                        continue sign;
-                    }
+                char[] tmp = besede[i];
+                besede[i] = besede[randInt];
+                besede[randInt] = tmp;
+
+                // če vzamemo eno od začetnih besed, prekinemo
+                // (~3X faster), (stBesedZaSeed / slovar.length) loss ~~> 0.000625 seed loss
+                if (i > this.stBesedZaSeed && kolikoVTabeli(this.ugotovljeneBesede, besede[i]) > 0) {
+                    continue outer;
                 }
-
-                // preglej prvih 10 besed
-                for (short j=0; j<this.stBesedZaSeed; j++) {
-                    if (Arrays.equals(besede[j], this.ugotovljeneBesede[j])) {
-                        continue;
-                    }
-
-                    continue sign;
-                }
-
-                this.semUgotovilSeed = true;
-                this.pravilneBesede = besede;
-
-                System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", seedCounter * sign);
-                break outer;
             }
 
-            seedCounter++;
+            // preglej prvih 10 besed
+            for (short j=0; j<this.stBesedZaSeed; j++) {
+                if (Arrays.equals(besede[j], this.ugotovljeneBesede[j])) {
+                    continue;
+                }
+
+                continue outer;
+            }
+
+            this.semUgotovilSeed = true;
+            this.pravilneBesede = besede;
+
+            System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", seedCounter);
+
+            break outer;
         }
 
         if (!semUgotovilSeed) {
-            System.out.printf("Na žalost ga nisem dobil :(%nPoiskal sem le semena od -%d do %d%n%n", Math.abs(seedCounter), Math.abs(seedCounter));
+            System.out.printf("Na žalost ga nisem dobil :(%nPoiskal sem le semena do %d%n%n", seedCounter);
             this.seedJeBilZgresen = true;
         }
     }
