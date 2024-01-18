@@ -20,7 +20,6 @@ public class Tekm_63230387 implements Stroj {
     private short pravilneBesedeCounter;
     private short stBesedZaSeed;
     private boolean seedJeBilZgresen;
-    private int crackingSeconds;
     private long zacetek;
 
     @Override
@@ -31,9 +30,6 @@ public class Tekm_63230387 implements Stroj {
 
         this.dolzinaBesed = 6;
         this.stBesedZaSeed = 30;
-        this.crackingSeconds = 10;
-
-        this.zacetek = System.currentTimeMillis();
 
         this.semUgotovilSeed = false;
         this.seedJeBilZgresen = false;
@@ -41,6 +37,8 @@ public class Tekm_63230387 implements Stroj {
         this.zacetneBesede = pretvoriBesede(besede);
         this.slovar = pretvoriBesede(besede);
         this.ugotovljeneBesede = new char[0][this.dolzinaBesed];
+
+        this.zacetek = System.currentTimeMillis();
     }
 
     @Override
@@ -184,17 +182,19 @@ public class Tekm_63230387 implements Stroj {
         Za vsak kandidat semena preverimo, če bi bilo prvih n členov enakih s novo premešanim slovarjem
         */
 
-        System.out.println(razlikaCasa + "ms");
+        System.out.printf("%n%dms%n", razlikaCasa);
         long casNaBesedo = razlikaCasa / this.stBesedZaSeed;
         System.out.println("na besedo: " + casNaBesedo + "ms");
         // to bo reklo precej več časa, ker potem se pospeši
-        System.out.println("estimated za vse besede: " + (casNaBesedo * (this.slovar.length - this.stBesedZaSeed) / 1000.) + "s");
+        double estimatedTime = casNaBesedo * (this.slovar.length - this.stBesedZaSeed) / 1000.;
+        estimatedTime *= 2./3; // pomnožimo z 2/3 da malo pospešimo
+        System.out.println("estimated za vse besede: " + (int) estimatedTime + "s (worst case seveda)");
+        int ostaliCas = 600 - (int) estimatedTime;
 
-        // TODO settaj čas bruteforce glede na prvih n besed
-        System.out.printf("%n'Investiram' %d sekund za iskanje semena...%n", this.crackingSeconds);
+        System.out.printf("%n'Investiram' %d sekund za iskanje semena...%n", ostaliCas);
 
         long start = System.currentTimeMillis();
-        long end = start + this.crackingSeconds * 1000L;
+        long end = start + ostaliCas * 1000L;
 
         int seedCounter = -1;
 
@@ -524,9 +524,6 @@ public class Tekm_63230387 implements Stroj {
         int score = 0;
         for (char[] beseda2: besede) {
             char[] odziv = izracunajOdziv(beseda2, beseda1);
-
-            // 12: 3.3684
-            // 23: 3.3657
 
             for (char o: odziv) {
                 switch (o) {

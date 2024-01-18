@@ -6,24 +6,31 @@ public class MyTesting {
     public static void main(String[] args) {
         char[][] besede = pretvoriBesede(TestSkupno.preberiSlovar(TestSkupno.SLOVAR));
 
-        for (int i=0; i<=100; i++) {
-            Random random = new Random(i);
-            System.out.println(i + ": " + random.nextInt(besede.length));
+        char[][] words = new char[][] {"banana".toCharArray(), "yourmom".toCharArray(), "horse".toCharArray()};
+        char[][] words2 = new char[3][];
+        words2[0] = words[0];
+        words2[1] = words[1];
+        words2[2] = words[2];
 
+        System.out.println(Arrays.deepToString(words2));
+        System.out.println(Arrays.toString(words));
+//        System.out.println(Arrays.toString(words2));
+        char[] a = new char[]{};
+        words[1] = a;
+        System.out.println(Arrays.deepToString(words2));
+        System.out.println(Arrays.toString(words));
+//        System.out.println(Arrays.toString(words2));
 
-
-
-
-//            char[][] besede2 = Arrays.copyOf(besede, besede.length);
-//            shuffleArray(besede2, random);
+//        String[] words = new String[] {"banana", "yourmom", "horse"};
+//        String[] words2 = new String[3];
+//        words2[0] = words[0];
+//        words2[1] = words[1];
+//        words2[2] = words[2];
 //
-//            for (int j=0; j<10; j++) {
-//                System.out.print(new String(besede2[j]) + ", ");
-//            }
-//
-//            System.out.println();
+//        System.out.println(Arrays.toString(words2));
+//        words[1] = null;
+//        System.out.println(Arrays.toString(words2));
         }
-    }
 
     private static void shuffleArray(int[] array, Random random) {
         for (int i = array.length - 1; i > 0; i--) {
