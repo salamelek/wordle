@@ -179,7 +179,7 @@ public class Tekm_63230387 implements Stroj {
 
             System.out.printf("YESSSSS SEM GA UGOTOVIL: %d%n%n", seedCounter);
 
-            break outer;
+            break;
         }
 
         if (!semUgotovilSeed) {
