@@ -139,7 +139,12 @@ public class Tekm_63230387 implements Stroj {
         System.out.printf("%n'Investiram' %d sekund za iskanje semena...%n", ostaliCas);
 
         long start = System.currentTimeMillis();
-        long end = start + ostaliCas * 1000L;
+//        long end = start + ostaliCas * 1000L;
+        long end = start + 10 * 1000L;
+
+        // priskrbimo si indekse ugotovljenih besed
+        short[] tabelaIndeksov = vrniTabeloIndeksov();
+
 
         int seedCounter = -1;
 
@@ -159,9 +164,12 @@ public class Tekm_63230387 implements Stroj {
                 besede[randInt] = tmp;
 
                 // če vzamemo eno od začetnih besed, prekinemo
-                // (~3X faster), (stBesedZaSeed / slovar.length) loss ~~> 0.000625 seed loss
-                if (i > this.stBesedZaSeed && kolikoVTabeli(this.ugotovljeneBesede, besede[i]) > 0) {
-                    continue outer;
+                if (i > this.stBesedZaSeed - 1) {
+                    for (short indeks: tabelaIndeksov) {
+                        if (indeks == randInt) {
+                            continue outer;
+                        }
+                    }
                 }
             }
 
@@ -186,6 +194,22 @@ public class Tekm_63230387 implements Stroj {
             System.out.printf("Na žalost ga nisem dobil :(%nPoiskal sem le semena do %d%n%n", seedCounter);
             this.seedJeBilZgresen = true;
         }
+
+        System.exit(1);
+    }
+
+    public short[] vrniTabeloIndeksov() {
+        short[] tabelaIndeksov = new short[this.stBesedZaSeed];
+
+        for (short i=0; i<this.ugotovljeneBesede.length; i++) {
+            for (short j=0; j<this.slovar.length; j++) {
+                if (Arrays.equals(this.ugotovljeneBesede[i], this.slovar[j])) {
+                    tabelaIndeksov[i] = j;
+                }
+            }
+        }
+
+        return tabelaIndeksov;
     }
 
     public char[] vrniBesedo_iskaneCrke(boolean[] razlike) {

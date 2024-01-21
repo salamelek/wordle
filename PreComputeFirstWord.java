@@ -326,42 +326,42 @@ public class PreComputeFirstWord {
 
         int bestScore = -1;
 
-        for (int l1=0; l1<possibleLetters.length; l1++) {
-            char letter1 = possibleLetters[l1];
-            System.out.println(letter1);
-
-            for (int l2=0; l2<possibleLetters.length; l2++) {
-                char letter2 = possibleLetters[l2];
-                if (l1 == l2) continue;
-
-                for (int l3=0; l3<possibleLetters.length; l3++) {
-                    char letter3 = possibleLetters[l3];
-                    if (l1 == l3 || l2 == l3) continue;
-
-                    for (int l4=0; l4<possibleLetters.length; l4++) {
-                        char letter4 = possibleLetters[l4];
-                        if (l1 == l4 || l2 == l4 || l3 == l4) continue;
-
-                        for (int l5=0; l5<possibleLetters.length; l5++) {
-                            char letter5 = possibleLetters[l5];
-                            if (l1 == l5 || l2 == l5 || l3 == l5 || l4 == l5) continue;
-
-                            for (int l6=0; l6<possibleLetters.length; l6++) {
-                                char letter6 = possibleLetters[l6];
-                                if (l1 == l6 || l2 == l6 || l3 == l6 || l4 == l6 || l5 == l6) continue;
-
-                                char[] word1 = new char[]{letter1, letter2, letter3, letter4, letter5, letter6};
-
-                                bestScore = test.printScore2(slovar, word1, bestScore);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-//        for (char[] word1: slovar) {
-//            printScore(slovar, word1);
+//        for (int l1=0; l1<possibleLetters.length; l1++) {
+//            char letter1 = possibleLetters[l1];
+//            System.out.println(letter1);
+//
+//            for (int l2=0; l2<possibleLetters.length; l2++) {
+//                char letter2 = possibleLetters[l2];
+//                if (l1 == l2) continue;
+//
+//                for (int l3=0; l3<possibleLetters.length; l3++) {
+//                    char letter3 = possibleLetters[l3];
+//                    if (l1 == l3 || l2 == l3) continue;
+//
+//                    for (int l4=0; l4<possibleLetters.length; l4++) {
+//                        char letter4 = possibleLetters[l4];
+//                        if (l1 == l4 || l2 == l4 || l3 == l4) continue;
+//
+//                        for (int l5=0; l5<possibleLetters.length; l5++) {
+//                            char letter5 = possibleLetters[l5];
+//                            if (l1 == l5 || l2 == l5 || l3 == l5 || l4 == l5) continue;
+//
+//                            for (int l6=0; l6<possibleLetters.length; l6++) {
+//                                char letter6 = possibleLetters[l6];
+//                                if (l1 == l6 || l2 == l6 || l3 == l6 || l4 == l6 || l5 == l6) continue;
+//
+//                                char[] word1 = new char[]{letter1, letter2, letter3, letter4, letter5, letter6};
+//
+//                                bestScore = test.printScore(slovar, word1, bestScore);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
 //        }
+
+        for (char[] word1: slovar) {
+            test.printScore(slovar, word1, bestScore);
+        }
     }
 }
